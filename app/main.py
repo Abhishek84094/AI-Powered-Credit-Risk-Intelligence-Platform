@@ -9,7 +9,7 @@ import os
 import sys
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException, APIRouter
+from fastapi import FastAPI, HTTPException, APIRouter, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import Optional, Any
@@ -29,6 +29,7 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s | %(message)s")
 logger = logging.getLogger(__name__)
 
 MODELS_DIR = os.path.join(ROOT, "models")
+DIST_DIR = os.path.join(ROOT, "frontend", "dist")
 _MODEL_LOAD_ERROR: Optional[str] = None
 
 def _models_ready() -> bool:
@@ -304,8 +305,11 @@ def model_metadata():
 # ─── Business Rules Endpoints ─────────────────────────────────────────────────
 
 @api_router.get("/rules")
-def get_rules():
-    """Return all business rules documentation."""
+def get_rules(request: Request):
+    """Return all business rules documentation (or serve SPA UI if requested by browser)."""
+    accept = request.headers.get("accept", "")
+    if "text/html" in accept and os.path.exists(os.path.join(DIST_DIR, "index.html")) and not request.url.path.startswith("/api"):
+        return FileResponse(os.path.join(DIST_DIR, "index.html"))
     from src.rules.rule_engine import get_all_rules_documentation
     return {"rules": get_all_rules_documentation()}
 
@@ -341,22 +345,21 @@ app.include_router(api_router, prefix="/api")
 app.include_router(api_router)
 
 # Mount frontend production build if present
-dist_dir = os.path.join(ROOT, "frontend", "dist")
-if os.path.exists(dist_dir):
+if os.path.exists(DIST_DIR):
     from fastapi.staticfiles import StaticFiles
-    assets_dir = os.path.join(dist_dir, "assets")
+    assets_dir = os.path.join(DIST_DIR, "assets")
     if os.path.exists(assets_dir):
         app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
 
     @app.get("/{full_path:path}")
     async def serve_react_app(full_path: str):
-        # Don't intercept API calls
-        if full_path.startswith("api/") or full_path in ["health", "status", "predict", "chat", "rules"]:
+        # Don't intercept API calls, healthcheck, docs
+        if full_path.startswith("api/") or full_path in ["health", "status", "docs", "openapi.json", "redoc"]:
             raise HTTPException(status_code=404)
-        file_path = os.path.join(dist_dir, full_path)
-        if os.path.isfile(file_path):
+        file_path = os.path.join(DIST_DIR, full_path)
+        if full_path and os.path.isfile(file_path):
             return FileResponse(file_path)
-        return FileResponse(os.path.join(dist_dir, "index.html"))
+        return FileResponse(os.path.join(DIST_DIR, "index.html"))
 
 
 if __name__ == "__main__":
