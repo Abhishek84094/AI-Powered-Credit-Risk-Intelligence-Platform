@@ -16,6 +16,7 @@
 *.db*
 *.sqlite*
 sql/*.db*
+!sql/credit_risk_seed.db
 
 # Python cache and environments
 __pycache__/

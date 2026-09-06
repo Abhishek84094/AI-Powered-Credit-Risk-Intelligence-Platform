@@ -39,7 +39,8 @@ def _models_ready() -> bool:
 
 def _db_ready() -> bool:
     db_path = os.path.join(ROOT, "sql", "credit_risk.db")
-    return os.path.exists(db_path) and os.path.getsize(db_path) > 0
+    seed_path = os.path.join(ROOT, "sql", "credit_risk_seed.db")
+    return (os.path.exists(db_path) and os.path.getsize(db_path) > 0) or (os.path.exists(seed_path) and os.path.getsize(seed_path) > 0)
 
 def _verify_and_preload_models() -> bool:
     """Startup verification: preload models and catch/log any sklearn/pickle incompatibility."""

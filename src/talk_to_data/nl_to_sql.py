@@ -367,8 +367,13 @@ def execute_query(sql: str, max_rows: int = 100) -> tuple[list[dict], list[str],
     Execute SQL against the read-only SQLite database.
     Returns (rows, columns, error_message).
     """
-    if not os.path.exists(DB_PATH):
-        return [], [], f"Database not found at {DB_PATH}. Run sql/init_db.py first."
+    db_to_use = DB_PATH
+    if not (os.path.exists(db_to_use) and os.path.getsize(db_to_use) > 0):
+        seed_path = os.path.join(ROOT, "sql", "credit_risk_seed.db")
+        if os.path.exists(seed_path) and os.path.getsize(seed_path) > 0:
+            db_to_use = seed_path
+        else:
+            return [], [], f"Database not found at {DB_PATH}. Run sql/init_db.py first."
 
     # Safety validation
     is_valid, error = validate_sql(sql)
@@ -376,7 +381,7 @@ def execute_query(sql: str, max_rows: int = 100) -> tuple[list[dict], list[str],
         return [], [], f"SQL validation failed: {error}"
 
     try:
-        conn = sqlite3.connect(f"file:{DB_PATH}?mode=ro", uri=True)
+        conn = sqlite3.connect(f"file:{db_to_use}?mode=ro", uri=True)
         conn.row_factory = sqlite3.Row
         conn.execute("PRAGMA query_only = ON;")
         cursor = conn.execute(sql)
