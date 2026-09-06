@@ -191,30 +191,30 @@ def generate_plain_english_explanation(prediction_result: dict, shap_result: dic
     """
     Generate a non-technical, human-readable risk explanation summary.
     Always reflects actual model output — never fabricated.
+    Formatted cleanly for Risk Desk Terminal without raw markdown asterisks.
     """
     prob = prediction_result["risk_score_pct"]
     band = prediction_result["risk_band"]
 
-    emoji_map = {"LOW": "🟢", "MEDIUM": "🟡", "HIGH": "🔴"}
     summary = [
-        f"**Risk Score:** {prob:.1f}%",
-        f"**Risk Band:** {emoji_map.get(band, '')} {band}",
+        f"RISK SCORE: {prob:.1f}%",
+        f"RISK BAND: [{band}]",
         "",
-        "**Main factors increasing risk:**",
+        "PRIMARY FACTORS INCREASING DEFAULT RISK:",
     ]
     for f in shap_result.get("risk_increasing_factors", [])[:3]:
-        summary.append(f"  • {f['interpretation']}")
+        summary.append(f"  > {f['interpretation']}")
 
     summary.append("")
-    summary.append("**Factors reducing risk:**")
+    summary.append("FACTORS MITIGATING DEFAULT RISK:")
     for f in shap_result.get("risk_reducing_factors", [])[:3]:
-        summary.append(f"  • {f['interpretation']}")
+        summary.append(f"  > {f['interpretation']}")
 
     if band == "HIGH":
-        summary.append("\n⚠️ This applicant shows several elevated risk signals.")
+        summary.append("\n[SIGNAL ALERT] Applicant demonstrates multiple elevated risk indicators.")
     elif band == "MEDIUM":
-        summary.append("\nℹ️ This applicant shows mixed risk signals.")
+        summary.append("\n[SIGNAL NOTICE] Applicant demonstrates mixed risk indicators.")
     else:
-        summary.append("\n✅ This applicant shows predominantly low-risk signals.")
+        summary.append("\n[SIGNAL CLEAR] Applicant demonstrates predominantly low-risk indicators.")
 
     return "\n".join(summary)

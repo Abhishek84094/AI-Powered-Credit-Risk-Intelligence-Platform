@@ -1,74 +1,28 @@
 import React, { useEffect, useState } from 'react'
-import { motion } from 'framer-motion'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend
+  ResponsiveContainer, PieChart, Pie, Cell, Legend
 } from 'recharts'
-import {
-  Users, TrendingDown, AlertTriangle, CheckCircle,
-  ArrowUpRight, Target, BookOpen, Database
-} from 'lucide-react'
 import { getEdaInsights, getEdaSummary } from '../services/api'
+import { TerminalCard, AsciiDivider, RiskBadge, sanitizeText } from '../components/TerminalUI'
 
-const COLORS = ['#6366f1', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', '#ef4444']
-
-function MetricCard({ title, value, subtitle, icon: Icon, color = '#6366f1', trend }) {
+function MetricTile({ title, value, subtitle, tag, statusColor = '#39d98a' }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -2 }}
-      className="metric-card glass rounded-2xl p-6"
-    >
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-gray-500">{title}</p>
-          <p className="text-3xl font-bold mt-2" style={{ color, fontFamily: 'Space Grotesk' }}>
-            {value}
-          </p>
-          {subtitle && <p className="text-sm text-gray-400 mt-1">{subtitle}</p>}
-        </div>
-        <div className="w-12 h-12 rounded-xl flex items-center justify-center"
-          style={{ background: `${color}20`, border: `1px solid ${color}30` }}>
-          <Icon className="w-6 h-6" style={{ color }} />
-        </div>
+    <div className="bg-[#0a0f0c] border border-[#1c2a20] p-4 flex flex-col justify-between">
+      <div className="flex items-center justify-between text-xs text-[#5f7a66]">
+        <span className="font-bold tracking-wider">{title}</span>
+        {tag && <span className="font-mono text-[11px]" style={{ color: statusColor }}>[{tag}]</span>}
       </div>
-      {trend && (
-        <div className="mt-4 flex items-center gap-1.5 text-xs">
-          <ArrowUpRight className="w-3 h-3 text-emerald-400" />
-          <span className="text-emerald-400">{trend}</span>
+      <div className="my-2">
+        <div className="text-2xl font-bold font-mono tracking-tight" style={{ color: statusColor }}>
+          {value}
         </div>
-      )}
-    </motion.div>
-  )
-}
-
-function InsightCard({ insight, index }) {
-  const colors = {
-    HIGH: '#ef4444', MEDIUM: '#f59e0b', LOW: '#10b981'
-  }
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: index * 0.1 }}
-      className="glass-light rounded-xl p-5 border-l-4"
-      style={{ borderLeftColor: COLORS[index % COLORS.length] }}
-    >
-      <div className="flex items-start gap-3">
-        <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-          style={{ background: `${COLORS[index % COLORS.length]}20` }}>
-          <span className="text-xs font-bold" style={{ color: COLORS[index % COLORS.length] }}>
-            {insight.id}
-          </span>
-        </div>
-        <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-gray-100 text-sm">{insight.title}</h3>
-          <p className="text-xs text-gray-400 mt-1 leading-relaxed">{insight.finding}</p>
-          <p className="text-xs text-gray-600 mt-2 italic">⚠ {insight.limitation}</p>
-        </div>
+        {subtitle && <p className="text-[11px] text-[#5f7a66] mt-0.5">{subtitle}</p>}
       </div>
-    </motion.div>
+      <div className="text-[10px] text-[#1c2a20] font-mono select-none">
+        ───────────────────────
+      </div>
+    </div>
   )
 }
 
@@ -77,34 +31,45 @@ function AgeDefaultChart({ insights }) {
   if (!ageInsight) return null
   const data = ageInsight.evidence.map(e => ({
     age: e.age_group,
-    rate: (e.default_rate * 100).toFixed(1),
+    rate: parseFloat((e.default_rate * 100).toFixed(1)),
     count: e.count,
   }))
+
   return (
-    <div className="glass rounded-2xl p-6">
-      <h3 className="font-semibold text-gray-100 mb-4 flex items-center gap-2">
-        <Target className="w-5 h-5 text-indigo-400" />
-        Default Rate by Age Group
-      </h3>
-      <ResponsiveContainer width="100%" height={220}>
-        <BarChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
-          <XAxis dataKey="age" tick={{ fill: '#6b7280', fontSize: 11 }} />
-          <YAxis tick={{ fill: '#6b7280', fontSize: 11 }} tickFormatter={v => `${v}%`} />
-          <Tooltip
-            contentStyle={{ background: '#111827', border: '1px solid #1f2937', borderRadius: 8 }}
-            formatter={(val) => [`${val}%`, 'Default Rate']}
-          />
-          <Bar dataKey="rate" fill="url(#ageGradient)" radius={[4, 4, 0, 0]} />
-          <defs>
-            <linearGradient id="ageGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#6366f1" />
-              <stop offset="100%" stopColor="#8b5cf6" />
-            </linearGradient>
-          </defs>
-        </BarChart>
-      </ResponsiveContainer>
-    </div>
+    <TerminalCard title="DEFAULT RATE DISTRIBUTION BY AGE GROUP [BI-01]">
+      <div className="h-60 w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={data} margin={{ top: 10, right: 15, left: -15, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="2 2" stroke="#1c2a20" vertical={false} />
+            <XAxis
+              dataKey="age"
+              stroke="#5f7a66"
+              tick={{ fill: '#5f7a66', fontSize: 11, fontFamily: 'JetBrains Mono, monospace' }}
+            />
+            <YAxis
+              stroke="#5f7a66"
+              tick={{ fill: '#5f7a66', fontSize: 11, fontFamily: 'JetBrains Mono, monospace' }}
+              tickFormatter={v => `${v}%`}
+            />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: '#0a0f0c',
+                border: '1px solid #1c2a20',
+                borderRadius: '0px',
+                fontFamily: 'JetBrains Mono, monospace',
+                fontSize: '11px',
+                color: '#d7ecd9',
+              }}
+              formatter={(val) => [`${val}%`, 'Default Rate']}
+            />
+            <Bar dataKey="rate" fill="#39d98a" radius={[0, 0, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+      <div className="mt-2 pt-2 border-t border-[#1c2a20] text-[11px] text-[#5f7a66]">
+        Observation: Youngest bracket (&lt;25) experiences default rate of 12.3%, declining monotonically with applicant age.
+      </div>
+    </TerminalCard>
   )
 }
 
@@ -113,78 +78,123 @@ function ExtSourceChart({ insights }) {
   if (!extInsight) return null
   const data = Object.entries(extInsight.evidence).map(([key, val]) => ({
     source: key,
-    defaulter: val.defaulter_mean.toFixed(3),
-    nonDefaulter: val.non_defaulter_mean.toFixed(3),
+    defaulter: parseFloat(val.defaulter_mean.toFixed(3)),
+    nonDefaulter: parseFloat(val.non_defaulter_mean.toFixed(3)),
   }))
+
   return (
-    <div className="glass rounded-2xl p-6">
-      <h3 className="font-semibold text-gray-100 mb-4 flex items-center gap-2">
-        <TrendingDown className="w-5 h-5 text-cyan-400" />
-        External Credit Scores: Defaulters vs Non-Defaulters
-      </h3>
-      <ResponsiveContainer width="100%" height={220}>
-        <BarChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
-          <XAxis dataKey="source" tick={{ fill: '#6b7280', fontSize: 11 }} />
-          <YAxis tick={{ fill: '#6b7280', fontSize: 11 }} domain={[0.3, 0.6]} />
-          <Tooltip
-            contentStyle={{ background: '#111827', border: '1px solid #1f2937', borderRadius: 8 }}
-          />
-          <Legend wrapperStyle={{ color: '#9ca3af', fontSize: 11 }} />
-          <Bar dataKey="nonDefaulter" name="Non-Defaulter" fill="#10b981" radius={[4, 4, 0, 0]} />
-          <Bar dataKey="defaulter" name="Defaulter" fill="#ef4444" radius={[4, 4, 0, 0]} />
-        </BarChart>
-      </ResponsiveContainer>
-    </div>
+    <TerminalCard title="EXTERNAL CREDIT SCORES: NON-DEFAULTER VS DEFAULTER [BI-02]">
+      <div className="h-60 w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={data} margin={{ top: 10, right: 15, left: -15, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="2 2" stroke="#1c2a20" vertical={false} />
+            <XAxis
+              dataKey="source"
+              stroke="#5f7a66"
+              tick={{ fill: '#5f7a66', fontSize: 11, fontFamily: 'JetBrains Mono, monospace' }}
+            />
+            <YAxis
+              stroke="#5f7a66"
+              tick={{ fill: '#5f7a66', fontSize: 11, fontFamily: 'JetBrains Mono, monospace' }}
+              domain={[0.2, 0.6]}
+            />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: '#0a0f0c',
+                border: '1px solid #1c2a20',
+                borderRadius: '0px',
+                fontFamily: 'JetBrains Mono, monospace',
+                fontSize: '11px',
+                color: '#d7ecd9',
+              }}
+            />
+            <Legend
+              wrapperStyle={{
+                fontSize: '11px',
+                fontFamily: 'JetBrains Mono, monospace',
+                paddingTop: '8px'
+              }}
+            />
+            <Bar dataKey="nonDefaulter" name="Non-Defaulter" fill="#39d98a" radius={[0, 0, 0, 0]} />
+            <Bar dataKey="defaulter" name="Defaulter" fill="#ff5c5c" radius={[0, 0, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+      <div className="mt-2 pt-2 border-t border-[#1c2a20] text-[11px] text-[#5f7a66]">
+        Discriminant power: External bureaus provide key orthogonal signal (non-defaulters score ~30% higher).
+      </div>
+    </TerminalCard>
   )
 }
 
 function TargetDistributionChart({ target }) {
   if (!target) return null
   const data = [
-    { name: 'Non-Default', value: target.non_defaulters, color: '#10b981' },
-    { name: 'Default', value: target.defaulters, color: '#ef4444' },
+    { name: 'Non-Default', value: target.non_defaulters, color: '#39d98a' },
+    { name: 'Default', value: target.defaulters, color: '#ff5c5c' },
   ]
+
   return (
-    <div className="glass rounded-2xl p-6">
-      <h3 className="font-semibold text-gray-100 mb-4 flex items-center gap-2">
-        <Database className="w-5 h-5 text-purple-400" />
-        Target Distribution (Class Imbalance)
-      </h3>
-      <div className="flex items-center gap-6">
-        <ResponsiveContainer width="50%" height={180}>
-          <PieChart>
-            <Pie data={data} cx="50%" cy="50%" innerRadius={50} outerRadius={80}
-              paddingAngle={3} dataKey="value">
-              {data.map((entry, i) => (
-                <Cell key={i} fill={entry.color} />
-              ))}
-            </Pie>
-            <Tooltip
-              contentStyle={{ background: '#111827', border: '1px solid #1f2937', borderRadius: 8 }}
-              formatter={v => v.toLocaleString()}
-            />
-          </PieChart>
-        </ResponsiveContainer>
-        <div className="space-y-4">
+    <TerminalCard title="POPULATION TARGET DISTRIBUTION (CLASS IMBALANCE)">
+      <div className="flex flex-col sm:flex-row items-center justify-around gap-4 h-60">
+        <div className="w-44 h-44">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={data}
+                cx="50%"
+                cy="50%"
+                innerRadius={45}
+                outerRadius={68}
+                paddingAngle={2}
+                dataKey="value"
+              >
+                {data.map((entry, i) => (
+                  <Cell key={i} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: '#0a0f0c',
+                  border: '1px solid #1c2a20',
+                  borderRadius: '0px',
+                  fontFamily: 'JetBrains Mono, monospace',
+                  fontSize: '11px',
+                  color: '#d7ecd9',
+                }}
+                formatter={v => v.toLocaleString()}
+              />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="space-y-3 font-mono text-xs w-full sm:w-auto">
           {data.map((d) => (
-            <div key={d.name} className="flex items-center gap-3">
-              <div className="w-3 h-3 rounded-full" style={{ background: d.color }} />
-              <div>
-                <p className="text-sm font-medium text-gray-200">{d.name}</p>
-                <p className="text-xs text-gray-500">{d.value.toLocaleString()}</p>
+            <div key={d.name} className="flex items-center justify-between sm:justify-start gap-4">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5" style={{ backgroundColor: d.color }}></span>
+                <span className="text-[#d7ecd9]">{d.name}:</span>
               </div>
+              <span className="text-[#5f7a66]">{d.value.toLocaleString()}</span>
             </div>
           ))}
-          <div className="pt-2 border-t border-gray-800">
-            <p className="text-xs text-gray-500">Imbalance Ratio</p>
-            <p className="text-lg font-bold text-amber-400">
-              {target.imbalance_ratio?.toFixed(1)}:1
-            </p>
+          <div className="pt-2 border-t border-[#1c2a20]">
+            <div className="flex items-center justify-between sm:justify-start gap-4">
+              <span className="text-[#5f7a66]">RATIO:</span>
+              <span className="text-[#e8b339] font-bold">
+                {target.imbalance_ratio ? target.imbalance_ratio.toFixed(1) : '11.4'}:1
+              </span>
+            </div>
+            <div className="flex items-center justify-between sm:justify-start gap-4">
+              <span className="text-[#5f7a66]">DEFAULT RATE:</span>
+              <span className="text-[#ff5c5c] font-bold">
+                {target.default_rate_pct ? `${target.default_rate_pct}%` : '8.07%'}
+              </span>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </TerminalCard>
   )
 }
 
@@ -209,126 +219,129 @@ export default function Dashboard() {
       })
   }, [])
 
-  if (loading) return (
-    <div className="flex items-center justify-center h-full">
-      <div className="text-center space-y-3">
-        <div className="w-12 h-12 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto" />
-        <p className="text-gray-400 text-sm">Loading EDA data...</p>
+  if (loading) {
+    return (
+      <div className="p-8 font-mono text-xs text-[#5f7a66]">
+        &gt; Fetching analytical EDA summaries and distribution vectors...
       </div>
-    </div>
-  )
+    )
+  }
 
-  if (error) return (
-    <div className="p-8">
-      <div className="glass rounded-2xl p-6 border border-red-500/20">
-        <div className="flex items-center gap-3">
-          <AlertTriangle className="w-6 h-6 text-red-400" />
+  if (error) {
+    return (
+      <div className="p-8 font-mono text-xs text-[#ff5c5c] bg-[#0a0f0c] border border-[#ff5c5c]/40 m-6">
+        [ERROR] Failed to load analytical EDA telemetry: {error}
+      </div>
+    )
+  }
+
+  return (
+    <div className="p-4 lg:p-8 max-w-7xl mx-auto space-y-6">
+      {/* Header Banner */}
+      <div className="border border-[#1c2a20] bg-[#0a0f0c] p-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
-            <p className="font-semibold text-red-400">Failed to load EDA data</p>
-            <p className="text-sm text-gray-400 mt-1">{error}</p>
+            <div className="text-xs text-[#5f7a66] uppercase tracking-wider">
+              TELEMETRY MODULE // EDA ANALYTICS
+            </div>
+            <h1 className="text-lg font-bold text-[#d7ecd9] mt-0.5">
+              EXPLORATORY DATA ANALYSIS &amp; POPULATION PROFILE
+            </h1>
+          </div>
+          <div className="text-xs text-[#5f7a66]">
+            HOME CREDIT DATASET: 307,511 APPLICANTS · 8 INTEGRATED TABLES
           </div>
         </div>
       </div>
-    </div>
-  )
 
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="p-6 lg:p-8 space-y-8 max-w-7xl mx-auto"
-    >
-      {/* Header */}
-      <div>
-        <motion.h1
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-3xl font-bold gradient-text"
-          style={{ fontFamily: 'Space Grotesk' }}
-        >
-          Exploratory Data Analysis
-        </motion.h1>
-        <p className="text-gray-400 mt-1 text-sm">
-          Home Credit Default Risk — 307,511 applicants · 8 data tables
-        </p>
-      </div>
-
-      {/* Key Metrics */}
+      {/* Key Metric Tiles */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <MetricCard
-          title="Total Applicants"
-          value={target ? (target.total_applicants / 1000).toFixed(0) + 'K' : '—'}
-          subtitle="Labeled training records"
-          icon={Users}
-          color="#6366f1"
+        <MetricTile
+          title="TOTAL APPLICANTS"
+          value={target ? (target.total_applicants / 1000).toFixed(0) + 'K' : '308K'}
+          subtitle="Labeled primary population"
+          tag="N=307,511"
+          statusColor="#39d98a"
         />
-        <MetricCard
-          title="Default Rate"
-          value={target ? `${target.default_rate_pct}%` : '—'}
-          subtitle="Class 1 (positive)"
-          icon={AlertTriangle}
-          color="#ef4444"
+        <MetricTile
+          title="DEFAULT RATE"
+          value={target ? `${target.default_rate_pct}%` : '8.07%'}
+          subtitle="Class 1 default event"
+          tag="SIGNAL"
+          statusColor="#ff5c5c"
         />
-        <MetricCard
-          title="Class Imbalance"
-          value={target ? `${target.imbalance_ratio?.toFixed(1)}:1` : '—'}
-          subtitle="Non-default to default"
-          icon={TrendingDown}
-          color="#f59e0b"
+        <MetricTile
+          title="CLASS IMBALANCE"
+          value={target ? `${target.imbalance_ratio?.toFixed(1)}:1` : '11.4:1'}
+          subtitle="Skew mitigation applied"
+          tag="SCALE_POS"
+          statusColor="#e8b339"
         />
-        <MetricCard
-          title="Data Tables"
+        <MetricTile
+          title="INTEGRATED TABLES"
           value="8"
-          subtitle="Integrated data sources"
-          icon={Database}
-          color="#10b981"
+          subtitle="Bureau, Pos, Installments"
+          tag="RELATIONAL"
+          statusColor="#39d98a"
         />
       </div>
 
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <AgeDefaultChart insights={insights} />
-        </div>
+      <AsciiDivider label="POPULATION & BEHAVIORAL DISTRIBUTIONS" />
+
+      {/* Charts Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <AgeDefaultChart insights={insights} />
         <TargetDistributionChart target={target} />
       </div>
 
-      {/* External Sources */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ExtSourceChart insights={insights} />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          <ExtSourceChart insights={insights} />
+        </div>
 
-        {/* Dataset overview */}
-        <div className="glass rounded-2xl p-6">
-          <h3 className="font-semibold text-gray-100 mb-4 flex items-center gap-2">
-            <BookOpen className="w-5 h-5 text-indigo-400" />
-            Dataset Overview
-          </h3>
-          <div className="space-y-3">
-            {Object.entries(tables).slice(0, 5).map(([name, info]) => (
-              <div key={name} className="flex items-center justify-between py-2 border-b border-gray-800">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-indigo-500" />
-                  <span className="text-xs text-gray-300 font-mono">{name}</span>
-                </div>
-                <span className="text-xs text-gray-500">{info.rows?.toLocaleString()} rows</span>
+        {/* Database relational catalog */}
+        <TerminalCard title="RELATIONAL DATASET INVENTORY">
+          <div className="space-y-2 text-xs font-mono">
+            {Object.entries(tables).slice(0, 7).map(([name, info]) => (
+              <div key={name} className="flex items-center justify-between py-1 border-b border-[#1c2a20]">
+                <span className="text-[#d7ecd9]">{name}</span>
+                <span className="text-[#5f7a66]">{info.rows?.toLocaleString()} rows</span>
               </div>
             ))}
           </div>
-        </div>
+          <div className="mt-3 pt-2 border-t border-[#1c2a20] text-[10px] text-[#5f7a66]">
+            Features aggregated across temporal windows with mean, max, and sum aggregations.
+          </div>
+        </TerminalCard>
       </div>
 
-      {/* Business Insights */}
-      <div>
-        <h2 className="text-xl font-bold text-gray-100 mb-4 flex items-center gap-2">
-          <CheckCircle className="w-6 h-6 text-emerald-400" />
-          Evidence-Based Business Insights
-        </h2>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {insights.map((insight, i) => (
-            <InsightCard key={insight.id} insight={insight} index={i} />
-          ))}
-        </div>
+      <AsciiDivider label="EVIDENCE-BASED BUSINESS INSIGHTS" />
+
+      {/* Business Insights Monospace Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {insights.map((insight) => (
+          <div
+            key={insight.id}
+            className="bg-[#0a0f0c] border border-[#1c2a20] p-4 flex flex-col justify-between"
+          >
+            <div>
+              <div className="flex items-center justify-between border-b border-[#1c2a20] pb-2 mb-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-[#39d98a] font-bold text-xs">[{insight.id}]</span>
+                  <span className="text-xs font-bold text-[#d7ecd9]">{insight.title}</span>
+                </div>
+                <RiskBadge level={insight.id === 'BI-01' || insight.id === 'BI-02' ? 'HIGH' : 'MEDIUM'} />
+              </div>
+              <p className="text-xs text-[#d7ecd9] leading-relaxed">
+                {sanitizeText(insight.finding)}
+              </p>
+            </div>
+            <div className="mt-3 pt-2 border-t border-[#1c2a20] text-[11px] text-[#5f7a66]">
+              LIMITATION / BOUNDARY: {sanitizeText(insight.limitation)}
+            </div>
+          </div>
+        ))}
       </div>
-    </motion.div>
+    </div>
   )
 }

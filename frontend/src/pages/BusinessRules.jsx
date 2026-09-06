@@ -1,14 +1,11 @@
 import React, { useEffect, useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import {
-  ShieldCheck, AlertTriangle, CheckCircle, Info, Sliders, Play, RefreshCw, ChevronRight, FileText
-} from 'lucide-react'
 import { getRules, evaluateRules } from '../services/api'
 import toast from 'react-hot-toast'
+import { TerminalCard, AsciiDivider, ActionBadge, RiskBadge, sanitizeText } from '../components/TerminalUI'
 
 const SAMPLE_PROFILES = [
   {
-    name: 'Prime Borrower',
+    name: 'PRIME BORROWER',
     data: {
       AMT_INCOME_TOTAL: 250000,
       AMT_CREDIT: 450000,
@@ -23,7 +20,7 @@ const SAMPLE_PROFILES = [
     }
   },
   {
-    name: 'Subprime / High Debt Borrower',
+    name: 'SUBPRIME / HIGH DEBT',
     data: {
       AMT_INCOME_TOTAL: 65000,
       AMT_CREDIT: 750000,
@@ -38,7 +35,7 @@ const SAMPLE_PROFILES = [
     }
   },
   {
-    name: 'Young Unemployed Applicant',
+    name: 'UNEMPLOYED APPLICANT',
     data: {
       AMT_INCOME_TOTAL: 40000,
       AMT_CREDIT: 200000,
@@ -85,7 +82,7 @@ export default function BusinessRules() {
       const payload = customData || testData
       const res = await evaluateRules(payload)
       setEvalResult(res)
-      toast.success('Rules evaluated against profile')
+      toast.success('Rules evaluation complete')
     } catch (err) {
       toast.error('Evaluation failed: ' + err.message)
     } finally {
@@ -99,162 +96,135 @@ export default function BusinessRules() {
   }
 
   return (
-    <div className="p-6 lg:p-10 max-w-7xl mx-auto space-y-8">
-      {/* Header */}
-      <div>
-        <div className="flex items-center gap-2 text-indigo-400 font-semibold text-sm tracking-wider uppercase mb-1">
-          <ShieldCheck className="w-4 h-4" /> Layer 5 — Policy & Governance
+    <div className="p-4 lg:p-8 max-w-7xl mx-auto space-y-6">
+      {/* Module Title */}
+      <div className="border border-[#1c2a20] bg-[#0a0f0c] p-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <div className="text-xs text-[#5f7a66] uppercase tracking-wider">
+              POLICY &amp; GOVERNANCE // LAYER 5
+            </div>
+            <h1 className="text-lg font-bold text-[#d7ecd9] mt-0.5">
+              EVIDENCE-DERIVED BUSINESS DECISION RULES ENGINE
+            </h1>
+          </div>
+          <div className="text-xs text-[#5f7a66]">
+            DATA-DRIVEN GUARDRAILS &amp; REGULATORY POLICY
+          </div>
         </div>
-        <h1 className="text-3xl font-extrabold text-white" style={{ fontFamily: 'Space Grotesk' }}>
-          Evidence-Based Business Rules Engine
-        </h1>
-        <p className="text-gray-400 text-sm mt-1">
-          Data-derived decision guards combining statistical thresholds, regulatory safety nets, and underwriting governance
-        </p>
       </div>
 
-      {/* Simulator Section */}
-      <div className="glass rounded-2xl p-6 border border-gray-800 space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h2 className="text-lg font-bold text-white flex items-center gap-2">
-              <Sliders className="w-5 h-5 text-indigo-400" />
-              Interactive Rule Policy Simulator
-            </h2>
-            <p className="text-xs text-gray-400 mt-0.5">
-              Select an applicant profile or tweak attributes to verify policy triggers
-            </p>
-          </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs text-gray-400">Sample Presets:</span>
-            {SAMPLE_PROFILES.map((p, idx) => (
+      {/* Simulator Box */}
+      <TerminalCard title="POLICY SIMULATOR & TEST BENCH">
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#1c2a20] pb-3">
+            <div className="text-xs text-[#5f7a66]">
+              TEST PROFILE SELECTION:
+            </div>
+            <div className="flex items-center gap-2 flex-wrap text-xs font-mono">
+              {SAMPLE_PROFILES.map((p, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => applyProfile(p)}
+                  className="px-3 py-1 bg-[#050706] border border-[#1c2a20] text-[#d7ecd9] hover:border-[#39d98a] hover:text-[#39d98a] transition-colors"
+                >
+                  [ {p.name} ]
+                </button>
+              ))}
               <button
-                key={idx}
-                onClick={() => applyProfile(p)}
-                className="px-3 py-1 rounded-lg text-xs font-medium bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700 transition-all hover:border-indigo-500"
+                onClick={() => handleEvaluate()}
+                disabled={evaluating}
+                className="px-3 py-1 bg-[#0a0f0c] border border-[#39d98a] text-[#39d98a] font-bold hover:bg-[#39d98a] hover:text-[#050706] transition-colors ml-auto disabled:opacity-50"
               >
-                {p.name}
+                {evaluating ? '> EVALUATING...' : '> RUN POLICY CHECK'}
               </button>
-            ))}
-            <button
-              onClick={() => handleEvaluate()}
-              disabled={evaluating}
-              className="flex items-center gap-1.5 px-4 py-1 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition-all shadow-lg shadow-indigo-600/30 ml-auto"
-            >
-              <Play className="w-3.5 h-3.5" />
-              {evaluating ? 'Evaluating...' : 'Run Evaluation'}
-            </button>
+            </div>
           </div>
-        </div>
 
-        {/* Evaluation Output if available */}
-        <AnimatePresence>
+          {/* Simulator Results */}
           {evalResult && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="p-5 rounded-xl border border-gray-700 bg-gray-900/90 space-y-4"
-            >
-              <div className="flex items-center justify-between flex-wrap gap-4 border-b border-gray-800 pb-3">
-                <div className="flex items-center gap-3">
-                  <span className="text-xs font-semibold text-gray-400 uppercase">Policy Decision:</span>
-                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                    evalResult.combined_action === 'APPROVE'
-                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-                      : evalResult.combined_action === 'MANUAL_REVIEW'
-                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                      : 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
-                  }`}>
-                    {evalResult.combined_action || 'EVALUATED'}
-                  </span>
+            <div className="p-4 bg-[#050706] border border-[#1c2a20] space-y-3 font-mono text-xs">
+              <div className="flex items-center justify-between border-b border-[#1c2a20] pb-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-[#5f7a66]">POLICY ACTION:</span>
+                  <ActionBadge action={evalResult.combined_action} />
                 </div>
-                <div className="text-xs text-gray-400">
-                  Triggered: <span className="font-bold text-white">{evalResult.triggered_count ?? evalResult.triggered_rules?.length ?? 0}</span> of {rules.length || 6} rules
+                <div className="text-[#5f7a66]">
+                  FLAGS TRIGGERED: <span className="text-[#d7ecd9] font-bold">{evalResult.triggered_count ?? evalResult.triggered_rules?.length ?? 0}</span> / {rules.length || 6}
                 </div>
               </div>
 
               {evalResult.triggered_rules && evalResult.triggered_rules.length > 0 ? (
                 <div className="space-y-2">
-                  <p className="text-xs font-semibold text-amber-400 uppercase tracking-wider">Triggered Flags & Recommendations:</p>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="text-[11px] text-[#e8b339] font-bold">
+                    TRIGGERED GOVERNANCE FLAGS &amp; REMEDIATION:
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     {evalResult.triggered_rules.map((tr, i) => (
-                      <div key={i} className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs text-amber-200">
-                        <div className="font-bold text-white flex items-center gap-1.5 mb-1">
-                          <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
-                          {tr.rule_name || tr.rule_id}
+                      <div key={i} className="p-2.5 border border-[#e8b339]/30 bg-[#0a0f0c]">
+                        <div className="flex items-center justify-between text-[#e8b339]">
+                          <span className="font-bold">[{tr.rule_id || `RULE-${i+1}`}] {tr.rule_name || tr.rule_id}</span>
+                          <span className="text-[10px]">[FLAG]</span>
                         </div>
-                        <p className="text-gray-300">{tr.reason || tr.recommendation}</p>
+                        <p className="text-[11px] text-[#d7ecd9] mt-1">
+                          {sanitizeText(tr.reason || tr.recommendation || tr.message)}
+                        </p>
                       </div>
                     ))}
                   </div>
                 </div>
               ) : (
-                <div className="flex items-center gap-2 text-xs text-emerald-400">
-                  <CheckCircle className="w-4 h-4" />
-                  All policy and credit guardrails passed without restrictive triggers.
+                <div className="text-[#39d98a] py-1">
+                  [PASS] All credit guardrails and underwriting governance rules cleared.
                 </div>
               )}
-            </motion.div>
+            </div>
           )}
-        </AnimatePresence>
-      </div>
+        </div>
+      </TerminalCard>
 
-      {/* Rules Catalog */}
-      <div className="space-y-4">
-        <h2 className="text-lg font-bold text-white flex items-center gap-2">
-          <FileText className="w-5 h-5 text-indigo-400" />
-          Configured Governance Rules ({rules.length || 6})
-        </h2>
+      <AsciiDivider label="ACTIVE GOVERNANCE RULES CATALOG" />
 
-        {loading ? (
-          <div className="h-40 flex items-center justify-center text-gray-500">
-            <RefreshCw className="w-6 h-6 animate-spin text-indigo-500" />
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {rules.map((rule, idx) => (
-              <div
-                key={rule.rule_id || idx}
-                className="glass rounded-2xl p-5 border border-gray-800 hover:border-gray-700 transition-all flex flex-col justify-between space-y-4"
-              >
-                <div>
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="space-y-1">
-                      <span className="text-xs font-mono font-semibold text-indigo-400">
-                        RULE-{String(idx + 1).padStart(2, '0')}
-                      </span>
-                      <h3 className="text-base font-bold text-white">{rule.name}</h3>
-                    </div>
-                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${
-                      rule.action === 'APPROVE'
-                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                        : rule.action === 'DECLINE'
-                        ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
-                        : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                    }`}>
-                      {rule.action || 'REVIEW'}
+      {/* Rules Catalog Monospace Cards */}
+      {loading ? (
+        <div className="p-8 text-xs text-[#5f7a66] font-mono">
+          &gt; Loading underwriting governance rules...
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {rules.map((rule, idx) => (
+            <div
+              key={rule.rule_id || idx}
+              className="bg-[#0a0f0c] border border-[#1c2a20] p-4 flex flex-col justify-between font-mono"
+            >
+              <div>
+                <div className="flex items-start justify-between gap-2 border-b border-[#1c2a20] pb-2 mb-2">
+                  <div>
+                    <span className="text-[#5f7a66] text-xs font-bold">
+                      [{rule.rule_id || `RULE-${String(idx + 1).padStart(2, '0')}`}]
                     </span>
+                    <h3 className="text-xs font-bold text-[#d7ecd9] mt-0.5">{rule.name}</h3>
                   </div>
-
-                  <p className="text-xs text-gray-400 mt-2 leading-relaxed">
-                    {rule.description}
-                  </p>
+                  <ActionBadge action={rule.action} />
                 </div>
 
-                <div className="bg-gray-900/70 p-3 rounded-xl border border-gray-800/80 space-y-1.5 text-xs">
-                  <div className="text-gray-400">
-                    <strong className="text-gray-300">Condition:</strong> <span className="font-mono text-indigo-300">{rule.condition_summary || rule.condition || 'Statistical threshold match'}</span>
-                  </div>
-                  <div className="text-gray-400">
-                    <strong className="text-gray-300">Evidence Base:</strong> <span className="text-gray-400">{rule.evidence_source || rule.evidence || 'Derived from EDA default rate analysis and SHAP ranking'}</span>
-                  </div>
+                <p className="text-xs text-[#d7ecd9] leading-relaxed">
+                  {sanitizeText(rule.description)}
+                </p>
+              </div>
+
+              <div className="mt-3 pt-2 border-t border-[#1c2a20] space-y-1 text-[11px]">
+                <div className="text-[#5f7a66]">
+                  CONDITION: <span className="text-[#39d98a]">{sanitizeText(rule.condition_summary || rule.condition || 'Statistical threshold match')}</span>
+                </div>
+                <div className="text-[#5f7a66]">
+                  EVIDENCE: <span className="text-[#5f7a66]">{sanitizeText(rule.evidence_source || rule.evidence || 'Derived from EDA default rate analysis and SHAP ranking')}</span>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
-      </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
