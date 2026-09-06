@@ -1,0 +1,20 @@
+# Ignore Python ML backend from Vercel build
+app/
+src/
+models/
+data/
+sql/
+reports/
+tests/
+scripts/
+requirements.txt
+Dockerfile
+docker-compose.yml
+docker-entrypoint.sh
+.env
+.env.example
+*.py
+*.pkl
+*.joblib
+*.db
+*.csv
