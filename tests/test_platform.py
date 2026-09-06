@@ -250,9 +250,9 @@ class TestCreditRiskPlatform(unittest.TestCase):
         X_proc = preprocessor.fit_transform(df_sample)
         self.assertEqual(X_proc.shape[0], 2)
 
-        feat_names = get_feature_names_out(preprocessor, num_cols, cat_cols)
+        feat_names = list(preprocessor.get_feature_names_out())
         self.assertGreaterEqual(len(feat_names), 4)
-        self.assertIn("AMT_CREDIT", feat_names)
+        self.assertTrue(any("AMT_CREDIT" in f for f in feat_names))
 
 
 if __name__ == "__main__":

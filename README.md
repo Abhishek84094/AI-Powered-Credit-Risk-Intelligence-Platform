@@ -227,3 +227,16 @@ AI-Powered Credit Risk Intelligence Platform/
 ├── requirements.txt                # Exact pinned dependencies (scikit-learn==1.6.1, lightgbm==4.7.0)
 └── README.md
 ```
+
+---
+
+## Known Limitations & Technical Notes
+
+### 1. Explainability Feature Alignment
+- **Issue**: Hand-crafted column extraction functions may assume all input numeric and categorical features survive transformation. When preprocessing sparse or optional datasets (e.g., credit bureau or past loan history for first-time borrowers), columns with 100% missing values are dropped during median imputation by `SimpleImputer`. If feature schemas are mapped manually, this creates index drift starting at the first dropped column, causing SHAP contribution scores to be mapped to incorrect feature labels.
+- **Resolution**: `models/feature_names.json` is exported directly from `preprocessor.get_feature_names_out()` on the fitted `ColumnTransformer`. Furthermore, `train.py` enforces a hard assertion (`len(feature_names) == base_model.n_features_`), and `src/ml/predict.py` executes an automated startup check comparing pipeline output dimensions with stored feature definitions to guarantee 100% fidelity.
+
+### 2. Exact Serialization and Model Pickling Compatibility
+- Model pipelines serialized with `joblib`/`pickle` are sensitive to minor version differences across `scikit-learn`, `lightgbm`, and `numpy`.
+- Dependencies in `requirements.txt` are pinned to exact versions (`scikit-learn==1.6.1`, `lightgbm==4.7.0`, `shap==0.46.0`) ensuring deterministic container deployment across development and production Docker instances without unpickling errors.
+

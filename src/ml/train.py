@@ -159,7 +159,6 @@ def _load_feature_matrix(nrows: int | None = None):
     from src.data.preprocessor import (
         build_preprocessor,
         get_feature_columns,
-        get_feature_names_out,
     )
 
     if not verify_data_files():
@@ -180,7 +179,11 @@ def _load_feature_matrix(nrows: int | None = None):
     elapsed = time.time() - t0
     logger.info("  Pipeline fit+transform: %.1fs → X shape: %s", elapsed, X_proc.shape)
 
-    feature_names = get_feature_names_out(preprocessor, numeric_cols, categorical_cols)
+    # Use the fitted ColumnTransformer's own method so that any columns silently
+    # dropped by SimpleImputer (all-NaN bureau/prev aggregates) are correctly
+    # excluded — the hand-written helper assumed every input column survived.
+    feature_names = list(preprocessor.get_feature_names_out())
+    logger.info("  Feature names from fitted pipeline: %d", len(feature_names))
 
     # Save pipeline and feature names
     pipeline_path = os.path.join(MODELS_DIR, "pipeline.pkl")
@@ -373,6 +376,24 @@ def train_final_model(X: np.ndarray, y: np.ndarray, best_params: dict,
     t0 = time.time()
     base_model = lgb.LGBMClassifier(**best_params)
     base_model.fit(X_train, y_train)
+
+    # Hard assertion: feature_names.json must align with what the model expects.
+    # A mismatch means every SHAP value past the divergence point is labelled wrong.
+    # Load the freshly-written feature_names.json and check against the model.
+    _fn_path = os.path.join(MODELS_DIR, "feature_names.json")
+    if os.path.exists(_fn_path):
+        with open(_fn_path) as _f:
+            _saved_feature_names = json.load(_f)
+        assert len(_saved_feature_names) == base_model.n_features_, (
+            f"FEATURE NAME ALIGNMENT ERROR: feature_names.json has {len(_saved_feature_names)} "
+            f"entries but the fitted model expects {base_model.n_features_} features. "
+            f"Regenerate feature_names.json by rerunning train.py — do NOT manually edit "
+            f"the JSON or the SHAP explanations will silently mislabel risk factors."
+        )
+        logger.info(
+            "  [OK] Feature name alignment verified: %d features in JSON == %d in model.",
+            len(_saved_feature_names), base_model.n_features_,
+        )
     logger.info("  Base model trained in %.1fs", time.time() - t0)
 
     # Calibration

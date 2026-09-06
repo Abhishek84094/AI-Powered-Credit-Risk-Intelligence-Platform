@@ -71,7 +71,25 @@ def build_preprocessor(numeric_cols: list[str], categorical_cols: list[str]) -> 
 def get_feature_names_out(preprocessor: ColumnTransformer,
                           numeric_cols: list[str],
                           categorical_cols: list[str]) -> list[str]:
-    """Extract feature names after fit_transform."""
+    """
+    DEPRECATED — kept for reference only.  Do NOT use in training.
+
+    This helper assumes every numeric column in `numeric_cols` survives
+    SimpleImputer, which is false when bureau_* / prev_* aggregates are
+    entirely NaN (SimpleImputer silently drops all-missing columns with
+    strategy='median').  The mismatch causes SHAP values from position ~115
+    onward to be attached to the wrong feature names.
+
+    Use  preprocessor.get_feature_names_out()  (called on a *fitted*
+    ColumnTransformer) instead — it reflects the actual output width.
+    """
+    import warnings
+    warnings.warn(
+        "get_feature_names_out() in preprocessor.py is deprecated.  "
+        "Call preprocessor.get_feature_names_out() on the fitted ColumnTransformer instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     cat_encoder = preprocessor.named_transformers_["cat"]["encoder"]
     cat_feature_names = list(cat_encoder.get_feature_names_out(categorical_cols))
     return numeric_cols + cat_feature_names
