@@ -48,6 +48,30 @@ The system is constructed with strict modular separation across **6 core layers*
 
 ---
 
+## Design Decisions
+
+### 1. Why LightGBM over XGBoost and Logistic Regression
+
+The 5-fold stratified cross-validation benchmark (see **Key Experimental Results** table below) showed Tuned LightGBM (EXP-03) reaching a validation ROC-AUC of **0.7812** and PR-AUC of **0.2741**, outperforming XGBoost (EXP-04: 0.7765 / 0.2678) and Logistic Regression (EXP-01: 0.7642 / 0.2443). Beyond raw AUC, LightGBM's leaf-wise growth and histogram-based binning made it significantly faster to tune across 293 sparse features — many bureau and previous-application aggregates with high NaN rates — and its native `scale_pos_weight` parameter avoids a separate resampling step. TreeSHAP also runs in exact polynomial time on LightGBM ensembles, which was a non-negotiable requirement for per-decision explainability.
+
+### 2. How Class Imbalance Was Handled and Why Calibration Was Needed on Top
+
+The dataset carries an **8.07% default rate** across 307K+ applicants — approximately 11.4 non-defaulters per defaulter. The production model is trained with `scale_pos_weight=11.4`, which up-weights minority-class gradient updates and improves recall without discarding majority-class samples. However, `scale_pos_weight` distorts the probability scale: the model's raw outputs are optimised for rank ordering (high ROC-AUC) but are not calibrated probabilities. Calibration is essential here because the risk bands (`LOW < 5%`, `MEDIUM 5–20%`, `HIGH ≥ 20%`) are defined in probability space and shown directly to underwriters. `CalibratedClassifierCV(method='isotonic', cv='prefit')` is applied post-training to map raw LightGBM scores to empirical posterior probabilities, verified to produce the observed within-band default rates (2.4% / 9.1% / 24.8%).
+
+### 3. Why TreeSHAP Instead of LIME
+
+TreeSHAP (via `shap.TreeExplainer`) computes **exact** Shapley values for tree ensembles in polynomial time — O(TLD²) where T is trees, L is leaves, and D is depth. LIME approximates feature attributions by fitting a local linear surrogate on random perturbations, introducing sampling variance and non-additive explanations that can differ across repeated calls on the same input. Because the platform exposes waterfall attributions directly to underwriters and generates Adverse Action text from them, the SHAP additivity property (base_value + Σ shap_i = predicted_probability) and reproducibility are both required. TreeSHAP satisfies both; LIME does not.
+
+### 4. Why Groq + Llama for NL-to-SQL, and Why a Deterministic Offline Fallback Was Built Alongside It
+
+Groq's inference API delivers sub-second token generation for `llama-3.3-70b-versatile` (the platform's primary model), making it practical for interactive analyst queries. It is also free-tier accessible with a single API key, which eliminates model-hosting costs for a demo deployment. The deterministic offline fallback (`OFFLINE_PATTERNS` and `_find_offline_pattern()` in `src/talk_to_data/nl_to_sql.py`) exists for two concrete reasons: (a) the Groq API is unavailable when `GROQ_API_KEY` is not set — for example in CI, local development, or Docker without secrets — and (b) LLM availability and latency are not guaranteed at inference time. The 25+ hard-coded SQL templates cover the most common underwriting queries and return identical results every run, keeping the test suite (`test_chat_endpoint_with_offline_fallback`, `test_offline_nl_to_sql_patterns`) fully deterministic without requiring a live API key.
+
+### 5. Why SQLite Instead of a Heavier Database
+
+The Talk-to-Data layer queries a single read-only SQLite file (`sql/credit_risk.db`, 224 MB) containing the full Home Credit dataset — 307K applicants, 305K bureau records, 1.67M previous applications, and 339K installments. SQLite is a deliberate choice for this **single-container, single-user demo deployment**: it requires zero infrastructure (no server daemon, no TCP port, no connection pool), ships inside the Docker image or can be volume-mounted, and supports read-only URI connections (`file:credit_risk.db?mode=ro`) that enforce the read-only boundary already provided by the SQL keyword firewall. For a multi-user production system with concurrent writes, a client-server database (e.g., PostgreSQL) would be the correct choice; for an analyst-facing demo with exclusively `SELECT` workloads, SQLite's zero-config simplicity is the right tradeoff.
+
+---
+
 ## Key Experimental Results
 
 All models were evaluated using **5-Fold Stratified Cross-Validation** with strict leakage prevention (imputation and scaling fit exclusively inside training splits):
