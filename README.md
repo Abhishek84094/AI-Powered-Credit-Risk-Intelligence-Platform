@@ -13,38 +13,133 @@
 
 ---
 
-## Architecture Overview
+## System Architecture & System Design
 
-The system is constructed with strict modular separation across **6 core layers**:
+CredPulse is engineered as a decoupled, multi-tier enterprise credit intelligence system comprising **6 core modular layers**:
 
+### 1. End-to-End System Architecture
+
+```mermaid
+flowchart TB
+    subgraph ClientLayer["1. PRESENTATION LAYER (Risk Desk Terminal)"]
+        UI["React 19 + Vite SPA<br/>(Tailwind CSS v4 • JetBrains Mono • Risk Desk Terminal)"]
+        UI_EDA["EDA Intelligence Console"]
+        UI_Score["Applicant Risk Scoring"]
+        UI_XAI["TreeSHAP Waterfall Explorer"]
+        UI_Rules["Governance Rules Matrix"]
+        UI_Chat["Talk-to-Data NL-to-SQL"]
+        UI --> UI_EDA & UI_Score & UI_XAI & UI_Rules & UI_Chat
+    end
+
+    subgraph APILayer["2. API & GATEWAY LAYER (FastAPI)"]
+        Gateway["FastAPI ASGI Server<br/>(Uvicorn • Pydantic V2 Schemas • CORS • Lifespan Preload)"]
+        Health["Healthcheck & Monitoring<br/>(/health • /status • /model/metadata)"]
+        Gateway --> Health
+    end
+
+    subgraph CoreIntelligence["3. CORE RISK INTELLIGENCE ENGINES"]
+        subgraph Preprocessing["Data & Feature Pipeline (Layer 1 & 2)"]
+            Imputer["Median Imputer + StandardScaler"]
+            OneHot["One-Hot Encoder (Sparse/Dense)"]
+            Alignment["Strict Feature Alignment Guard<br/>(293 Fitted Features Out)"]
+        end
+
+        subgraph MLScoring["ML Risk Scoring (Layer 3)"]
+            LGBM["Tuned LightGBM Classifier<br/>(ROC-AUC: 0.7812 • PR-AUC: 0.2741)"]
+            Calibrator["Isotonic Probability Calibrator<br/>(CalibratedClassifierCV)"]
+            Bands["Risk Band Slicer<br/>(LOW &lt; 5% • MED 5-20% • HIGH &ge; 20%)"]
+        end
+
+        subgraph Explainability["Explainable AI (Layer 4)"]
+            TreeSHAP["TreeSHAP Explainer<br/>(Exact O(TLD²) Polynomial Time)"]
+            Waterfall["Waterfall Attributions<br/>(Top Protective &amp; Risk Factors)"]
+            AdverseAction["Adverse Action Code Generator<br/>(FCRA/ECOA Regulatory Compliance)"]
+        end
+
+        subgraph RuleEngine["Governance & Policy (Layer 5)"]
+            Rules["Deterministic Business Rules Engine<br/>(6 Empirical Credit Policy Guardrails)"]
+            Audit["Policy Override &amp; Simulation Auditor"]
+        end
+    end
+
+    subgraph ConversationalAnalytics["4. CONVERSATIONAL ANALYTICS (Layer 6)"]
+        NL2SQL["NL-to-SQL Translation Router"]
+        GroqLLM["Groq Cloud LLM<br/>(Llama-3.3-70B-Versatile • Zero Hallucination Schema)"]
+        Fallback["Deterministic Offline Engine<br/>(25+ Pre-compiled Analytical SQL Patterns)"]
+        Firewall["SQL Keyword Security Firewall<br/>(Blocks DML/DDL • Read-Only Enforcement)"]
+    end
+
+    subgraph DataStorage["5. DATA PERSISTENCE LAYER"]
+        SQLiteDB[("Analytical SQLite Database<br/>(credit_risk.db • WAL Mode • Indexed)")]
+        Tables["applicants (307K) • bureau_summary (305K)<br/>previous_applications (1.67M) • installment_summary (339K)"]
+        SQLiteDB --- Tables
+    end
+
+    %% Flow connections
+    ClientLayer <-->|REST API JSON / HTTP| Gateway
+    Gateway --> Preprocessing
+    Preprocessing --> MLScoring
+    MLScoring --> Calibrator --> Bands
+    MLScoring --> TreeSHAP --> Waterfall --> AdverseAction
+    MLScoring --> RuleEngine --> Audit
+    Gateway <--> ConversationalAnalytics
+    NL2SQL --> GroqLLM & Fallback
+    GroqLLM & Fallback --> Firewall --> SQLiteDB
 ```
- ┌─────────────────────────────────────────────────────────────────────────────┐
- │                             REACT 19 FRONTEND                               │
- │   EDA Dashboard  •  Risk Scoring  •  TreeSHAP XAI  •  Rules  •  NL-to-SQL   │
- └──────────────────────────────────────┬──────────────────────────────────────┘
-                                        │ JSON REST API
- ┌──────────────────────────────────────▼──────────────────────────────────────┐
- │                              FASTAPI BACKEND                                │
- │               Async Endpoints  •  Pydantic V2 Schemas  •  CORS              │
- └──────────────────┬───────────────────┬───────────────────┬──────────────────┘
-                    │                   │                   │
- ┌──────────────────▼──────┐ ┌──────────▼─────────┐ ┌───────▼─────────────────┐
- │   LAYER 3: ML SCORING   │ │ LAYER 4: TREE-SHAP │ │ LAYER 5: BUSINESS RULES │
- │ Tuned LightGBM (0.7812) │ │ Additive Shapley   │ │ 6 Validated Guardrails  │
- │ Isotonic Calibration    │ │ Waterfall Attrib.  │ │ Underwriting Simulator  │
- │ F1-Optimal Thresholding │ │ Adverse Action Rsn │ │ Governance Engine       │
- └─────────────────────────┘ └────────────────────┘ └─────────────────────────┘
-                    │                   │                   │
- ┌──────────────────▼───────────────────▼───────────────────▼──────────────────┐
- │                         LAYER 6: TALK-TO-DATA                               │
- │   Groq Llama-3.3-70B  •  Deterministic Offline Fallback  •  Safe SQL Engine │
- └──────────────────────────────────────┬──────────────────────────────────────┘
-                                        │ Read-Only Analytics
- ┌──────────────────────────────────────▼──────────────────────────────────────┐
- │                         SQLITE ANALYTICAL DATABASE                          │
- │  307K Applicants • 305K Bureau • 1.67M Prev Applications • 339K Installments│
- └─────────────────────────────────────────────────────────────────────────────┘
+
+### 2. Underwriting Decision Sequence
+
+When an applicant is evaluated (`POST /api/predict/explain`), the request executes through this synchronous sequence:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Underwriter as Credit Underwriter / Client
+    participant API as FastAPI Gateway
+    participant Preproc as Preprocessor Pipeline
+    participant Model as Tuned LightGBM
+    participant Calib as Isotonic Calibrator
+    participant SHAP as TreeSHAP Engine
+    participant Rules as Policy Rule Engine
+
+    Underwriter->>API: POST /api/predict/explain (Applicant JSON)
+    API->>Preproc: Transform raw applicant features
+    Preproc-->>API: 293 Aligned numeric features
+    API->>Model: Compute raw ensemble log-odds
+    Model-->>Calib: Raw prediction score
+    Calib-->>API: Calibrated Default Probability (PD %) & Risk Band
+    par Parallel Explainability & Policy Evaluation
+        API->>SHAP: Calculate exact additive Shapley values
+        SHAP-->>API: Top risk/protective factors & Adverse Action codes
+    and
+        API->>Rules: Evaluate 6 Business Policy Rules
+        Rules-->>API: Triggered policy guardrails & risk direction
+    end
+    API-->>Underwriter: Comprehensive Risk Dossier (PD, Band, SHAP Waterfall, Rules)
 ```
+
+### 3. Talk-to-Data NL-to-SQL Query Flow
+
+```mermaid
+flowchart LR
+    Question["Analyst Query<br/>'What is the default rate by education?'"] --> Router{"Groq API Key<br/>Available?"}
+    Router -->|Yes| LLM["Groq Llama-3.3-70B<br/>(Schema-Restricted Prompt)"]
+    Router -->|No / Offline| Fallback["Offline Pattern Matcher<br/>(25+ Pre-compiled Patterns)"]
+    LLM --> SQL["Generated SQL Query"]
+    Fallback --> SQL
+    SQL --> Firewall{"Security Firewall<br/>(SELECT Only? No DDL/DML?)"}
+    Firewall -->|Valid| Execute["SQLite Read-Only Execution<br/>(credit_risk.db)"]
+    Firewall -->|Invalid| Reject["Reject with Security Alert"]
+    Execute --> BusinessAnswer["Synthesize Business Answer &amp; Data Table"]
+```
+
+---
+
+## Project Presentation & Executive Deck
+
+A complete presentation deck detailing the problem statement, exploratory data analysis, machine learning benchmarks, explainability architecture, governance rules, and system design is included in the project:
+
+- 📊 **PowerPoint Presentation:** [`documents/CredPulse_Presentation.pptx`](file:///c:/Users/Abhishek/OneDrive/Pictures/Desktop/AI-Powered%20Credit%20Risk%20Intelligence%20Platform/documents/CredPulse_Presentation.pptx)
 
 ---
 
@@ -215,6 +310,8 @@ AI-Powered Credit Risk Intelligence Platform/
 │   └── main.py                     # FastAPI REST API & SPA static serving (with lifespan checks)
 ├── data/
 │   └── home-credit-default-risk/   # Raw Home Credit CSV dataset files (mounted in Docker)
+├── documents/
+│   └── CredPulse_Presentation.pptx # Executive project presentation deck
 ├── experiments/
 │   └── model_experiments.csv       # CV benchmark audit trail (EXP-01 - EXP-04)
 ├── frontend/
