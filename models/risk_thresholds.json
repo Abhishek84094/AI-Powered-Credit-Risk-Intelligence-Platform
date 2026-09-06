@@ -1,0 +1,14 @@
+{
+  "low_threshold": 0.05,
+  "high_threshold": 0.2,
+  "band_dist": {
+    "LOW": 0.5706,
+    "MEDIUM": 0.3265,
+    "HIGH": 0.1029
+  },
+  "actual_default_rates": {
+    "LOW": 0.0121,
+    "MEDIUM": 0.1113,
+    "HIGH": 0.3646
+  }
+}

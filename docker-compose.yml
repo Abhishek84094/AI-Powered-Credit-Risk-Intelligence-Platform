@@ -1,0 +1,25 @@
+version: "3.8"
+
+services:
+  credpulse-platform:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: credpulse-credit-intelligence
+    ports:
+      - "8000:8000"
+    environment:
+      - GROQ_API_KEY=${GROQ_API_KEY:-}
+      - ENVIRONMENT=production
+    volumes:
+      - ./data:/app/data:ro
+      - ./models:/app/models
+      - ./reports:/app/reports
+      - ./sql:/app/sql
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s

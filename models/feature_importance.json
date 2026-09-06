@@ -1,0 +1,1358 @@
+[
+  {
+    "feature": "EXT_SOURCE_MEAN",
+    "importance": 546
+  },
+  {
+    "feature": "CREDIT_TO_GOODS",
+    "importance": 490
+  },
+  {
+    "feature": "EXT_SOURCE_1",
+    "importance": 480
+  },
+  {
+    "feature": "AMT_ANNUITY",
+    "importance": 469
+  },
+  {
+    "feature": "pos_CNT_INSTALMENT_FUTURE_mean",
+    "importance": 459
+  },
+  {
+    "feature": "EXT_SOURCE_2",
+    "importance": 457
+  },
+  {
+    "feature": "EXT_SOURCE_3",
+    "importance": 439
+  },
+  {
+    "feature": "DAYS_BIRTH",
+    "importance": 438
+  },
+  {
+    "feature": "DAYS_ID_PUBLISH",
+    "importance": 423
+  },
+  {
+    "feature": "EXT_SOURCE_PRODUCT",
+    "importance": 398
+  },
+  {
+    "feature": "DAYS_LAST_PHONE_CHANGE",
+    "importance": 393
+  },
+  {
+    "feature": "CREDIT_PER_PERSON",
+    "importance": 391
+  },
+  {
+    "feature": "AMT_GOODS_PRICE",
+    "importance": 382
+  },
+  {
+    "feature": "prev_DAYS_DECISION_mean",
+    "importance": 378
+  },
+  {
+    "feature": "DAYS_REGISTRATION",
+    "importance": 358
+  },
+  {
+    "feature": "EXT_SOURCE_MIN",
+    "importance": 357
+  },
+  {
+    "feature": "APPLICANT_AGE_YEARS",
+    "importance": 354
+  },
+  {
+    "feature": "ANNUITY_TO_INCOME",
+    "importance": 351
+  },
+  {
+    "feature": "bur_AMT_CREDIT_SUM_mean",
+    "importance": 348
+  },
+  {
+    "feature": "DAYS_EMPLOYED",
+    "importance": 344
+  },
+  {
+    "feature": "pos_n_records",
+    "importance": 335
+  },
+  {
+    "feature": "inst_PAYMENT_DELAY_DAYS_sum",
+    "importance": 333
+  },
+  {
+    "feature": "DEBT_TO_INCOME",
+    "importance": 328
+  },
+  {
+    "feature": "prev_CNT_PAYMENT_mean",
+    "importance": 325
+  },
+  {
+    "feature": "AMT_CREDIT",
+    "importance": 322
+  },
+  {
+    "feature": "bur_DAYS_CREDIT_mean",
+    "importance": 320
+  },
+  {
+    "feature": "REGION_POPULATION_RELATIVE",
+    "importance": 317
+  },
+  {
+    "feature": "EMPLOYED_YEARS",
+    "importance": 310
+  },
+  {
+    "feature": "prev_AMT_DOWN_PAYMENT_sum",
+    "importance": 307
+  },
+  {
+    "feature": "inst_PAYMENT_DELAY_DAYS_mean",
+    "importance": 307
+  },
+  {
+    "feature": "prev_AMT_ANNUITY_mean",
+    "importance": 304
+  },
+  {
+    "feature": "inst_AMT_PAYMENT_sum",
+    "importance": 303
+  },
+  {
+    "feature": "inst_PAYMENT_DELAY_DAYS_max",
+    "importance": 290
+  },
+  {
+    "feature": "bur_AMT_CREDIT_SUM_DEBT_mean",
+    "importance": 280
+  },
+  {
+    "feature": "inst_IS_LATE_mean",
+    "importance": 278
+  },
+  {
+    "feature": "inst_PAYMENT_DIFF_mean",
+    "importance": 269
+  },
+  {
+    "feature": "bur_DAYS_CREDIT_min",
+    "importance": 266
+  },
+  {
+    "feature": "bur_AMT_CREDIT_SUM_max",
+    "importance": 263
+  },
+  {
+    "feature": "cc_UTILIZATION_max",
+    "importance": 244
+  },
+  {
+    "feature": "inst_AMT_PAYMENT_mean",
+    "importance": 242
+  },
+  {
+    "feature": "bur_AMT_CREDIT_SUM_sum",
+    "importance": 233
+  },
+  {
+    "feature": "prev_CNT_PAYMENT_sum",
+    "importance": 231
+  },
+  {
+    "feature": "pos_CNT_INSTALMENT_mean",
+    "importance": 231
+  },
+  {
+    "feature": "bur_active_credit_ratio",
+    "importance": 221
+  },
+  {
+    "feature": "prev_AMT_ANNUITY_max",
+    "importance": 211
+  },
+  {
+    "feature": "prev_AMT_GOODS_PRICE_mean",
+    "importance": 209
+  },
+  {
+    "feature": "inst_n_payments",
+    "importance": 209
+  },
+  {
+    "feature": "inst_AMT_INSTALMENT_mean",
+    "importance": 202
+  },
+  {
+    "feature": "bur_active_debt_sum",
+    "importance": 196
+  },
+  {
+    "feature": "prev_refusal_rate",
+    "importance": 192
+  },
+  {
+    "feature": "inst_AMT_INSTALMENT_sum",
+    "importance": 189
+  },
+  {
+    "feature": "prev_RATE_DOWN_PAYMENT_mean",
+    "importance": 187
+  },
+  {
+    "feature": "OWN_CAR_AGE",
+    "importance": 183
+  },
+  {
+    "feature": "prev_AMT_CREDIT_mean",
+    "importance": 181
+  },
+  {
+    "feature": "cc_AMT_DRAWINGS_CURRENT_mean",
+    "importance": 178
+  },
+  {
+    "feature": "bur_AMT_CREDIT_SUM_DEBT_sum",
+    "importance": 173
+  },
+  {
+    "feature": "prev_AMT_APPLICATION_mean",
+    "importance": 172
+  },
+  {
+    "feature": "prev_AMT_APPLICATION_sum",
+    "importance": 170
+  },
+  {
+    "feature": "inst_PAYMENT_DIFF_min",
+    "importance": 166
+  },
+  {
+    "feature": "INCOME_PER_PERSON",
+    "importance": 162
+  },
+  {
+    "feature": "cc_n_records",
+    "importance": 162
+  },
+  {
+    "feature": "inst_IS_UNDERPAID_mean",
+    "importance": 159
+  },
+  {
+    "feature": "prev_AMT_CREDIT_sum",
+    "importance": 152
+  },
+  {
+    "feature": "cc_UTILIZATION_mean",
+    "importance": 149
+  },
+  {
+    "feature": "bur_AMT_CREDIT_MAX_OVERDUE_mean",
+    "importance": 146
+  },
+  {
+    "feature": "AMT_INCOME_TOTAL",
+    "importance": 145
+  },
+  {
+    "feature": "bur_active_credits",
+    "importance": 142
+  },
+  {
+    "feature": "prev_approval_rate",
+    "importance": 141
+  },
+  {
+    "feature": "bur_AMT_CREDIT_MAX_OVERDUE_max",
+    "importance": 132
+  },
+  {
+    "feature": "YEARS_BEGINEXPLUATATION_MODE",
+    "importance": 126
+  },
+  {
+    "feature": "HOUR_APPR_PROCESS_START",
+    "importance": 120
+  },
+  {
+    "feature": "pos_SK_DPD_DEF_mean",
+    "importance": 118
+  },
+  {
+    "feature": "cc_AMT_CREDIT_LIMIT_ACTUAL_mean",
+    "importance": 114
+  },
+  {
+    "feature": "bur_closed_credits",
+    "importance": 108
+  },
+  {
+    "feature": "TOTALAREA_MODE",
+    "importance": 103
+  },
+  {
+    "feature": "bur_n_credits",
+    "importance": 103
+  },
+  {
+    "feature": "CODE_GENDER_F",
+    "importance": 101
+  },
+  {
+    "feature": "cc_AMT_BALANCE_max",
+    "importance": 96
+  },
+  {
+    "feature": "REGION_RATING_CLIENT_W_CITY",
+    "importance": 94
+  },
+  {
+    "feature": "NAME_FAMILY_STATUS_Married",
+    "importance": 91
+  },
+  {
+    "feature": "APARTMENTS_MODE",
+    "importance": 90
+  },
+  {
+    "feature": "NONLIVINGAREA_AVG",
+    "importance": 88
+  },
+  {
+    "feature": "AMT_REQ_CREDIT_BUREAU_QRT",
+    "importance": 87
+  },
+  {
+    "feature": "LANDAREA_MODE",
+    "importance": 84
+  },
+  {
+    "feature": "NONLIVINGAREA_MEDI",
+    "importance": 84
+  },
+  {
+    "feature": "FLAG_OWN_CAR_N",
+    "importance": 83
+  },
+  {
+    "feature": "LANDAREA_MEDI",
+    "importance": 81
+  },
+  {
+    "feature": "pos_MONTHS_BALANCE_count",
+    "importance": 81
+  },
+  {
+    "feature": "BASEMENTAREA_AVG",
+    "importance": 80
+  },
+  {
+    "feature": "APARTMENTS_AVG",
+    "importance": 79
+  },
+  {
+    "feature": "cc_AMT_PAYMENT_CURRENT_mean",
+    "importance": 79
+  },
+  {
+    "feature": "LANDAREA_AVG",
+    "importance": 77
+  },
+  {
+    "feature": "LIVINGAREA_AVG",
+    "importance": 77
+  },
+  {
+    "feature": "CODE_GENDER_M",
+    "importance": 76
+  },
+  {
+    "feature": "COMMONAREA_MODE",
+    "importance": 73
+  },
+  {
+    "feature": "LIVINGAPARTMENTS_MODE",
+    "importance": 72
+  },
+  {
+    "feature": "BASEMENTAREA_MODE",
+    "importance": 71
+  },
+  {
+    "feature": "LIVINGAREA_MODE",
+    "importance": 71
+  },
+  {
+    "feature": "DEF_30_CNT_SOCIAL_CIRCLE",
+    "importance": 71
+  },
+  {
+    "feature": "prev_status_Approved_sum",
+    "importance": 71
+  },
+  {
+    "feature": "COMMONAREA_AVG",
+    "importance": 70
+  },
+  {
+    "feature": "bur_AMT_ANNUITY_sum",
+    "importance": 70
+  },
+  {
+    "feature": "NONLIVINGAREA_MODE",
+    "importance": 69
+  },
+  {
+    "feature": "cc_AMT_BALANCE_mean",
+    "importance": 67
+  },
+  {
+    "feature": "FLAG_DOCUMENT_3",
+    "importance": 66
+  },
+  {
+    "feature": "YEARS_BEGINEXPLUATATION_AVG",
+    "importance": 64
+  },
+  {
+    "feature": "COMMONAREA_MEDI",
+    "importance": 64
+  },
+  {
+    "feature": "NAME_EDUCATION_TYPE_Higher education",
+    "importance": 64
+  },
+  {
+    "feature": "BASEMENTAREA_MEDI",
+    "importance": 63
+  },
+  {
+    "feature": "LIVINGAREA_MEDI",
+    "importance": 63
+  },
+  {
+    "feature": "inst_IS_LATE_sum",
+    "importance": 63
+  },
+  {
+    "feature": "pos_IS_DPD_DEF_mean",
+    "importance": 62
+  },
+  {
+    "feature": "YEARS_BEGINEXPLUATATION_MEDI",
+    "importance": 60
+  },
+  {
+    "feature": "AMT_REQ_CREDIT_BUREAU_YEAR",
+    "importance": 60
+  },
+  {
+    "feature": "OBS_60_CNT_SOCIAL_CIRCLE",
+    "importance": 59
+  },
+  {
+    "feature": "pos_SK_DPD_DEF_max",
+    "importance": 59
+  },
+  {
+    "feature": "bur_bb_dpd_mean_mean",
+    "importance": 58
+  },
+  {
+    "feature": "FLAG_WORK_PHONE",
+    "importance": 57
+  },
+  {
+    "feature": "REG_CITY_NOT_LIVE_CITY",
+    "importance": 57
+  },
+  {
+    "feature": "prev_n_applications",
+    "importance": 57
+  },
+  {
+    "feature": "YEARS_BUILD_MODE",
+    "importance": 55
+  },
+  {
+    "feature": "APARTMENTS_MEDI",
+    "importance": 55
+  },
+  {
+    "feature": "NAME_EDUCATION_TYPE_Secondary / secondary special",
+    "importance": 55
+  },
+  {
+    "feature": "LIVINGAPARTMENTS_AVG",
+    "importance": 53
+  },
+  {
+    "feature": "DEF_60_CNT_SOCIAL_CIRCLE",
+    "importance": 52
+  },
+  {
+    "feature": "pos_IS_DPD_sum",
+    "importance": 52
+  },
+  {
+    "feature": "OBS_30_CNT_SOCIAL_CIRCLE",
+    "importance": 51
+  },
+  {
+    "feature": "prev_status_Canceled_sum",
+    "importance": 51
+  },
+  {
+    "feature": "bur_AMT_CREDIT_SUM_OVERDUE_sum",
+    "importance": 50
+  },
+  {
+    "feature": "ENTRANCES_AVG",
+    "importance": 49
+  },
+  {
+    "feature": "cc_AMT_PAYMENT_CURRENT_sum",
+    "importance": 49
+  },
+  {
+    "feature": "LIVINGAPARTMENTS_MEDI",
+    "importance": 45
+  },
+  {
+    "feature": "YEARS_BUILD_AVG",
+    "importance": 44
+  },
+  {
+    "feature": "FLOORSMAX_AVG",
+    "importance": 44
+  },
+  {
+    "feature": "cc_AMT_PAYMENT_TOTAL_CURRENT_sum",
+    "importance": 44
+  },
+  {
+    "feature": "YEARS_BUILD_MEDI",
+    "importance": 43
+  },
+  {
+    "feature": "ORGANIZATION_TYPE_Self-employed",
+    "importance": 43
+  },
+  {
+    "feature": "NONLIVINGAPARTMENTS_MODE",
+    "importance": 42
+  },
+  {
+    "feature": "FLAG_DOCUMENT_18",
+    "importance": 42
+  },
+  {
+    "feature": "pos_SK_DPD_mean",
+    "importance": 42
+  },
+  {
+    "feature": "pos_SK_DPD_max",
+    "importance": 42
+  },
+  {
+    "feature": "cc_AMT_PAYMENT_TOTAL_CURRENT_mean",
+    "importance": 38
+  },
+  {
+    "feature": "OCCUPATION_TYPE_Core staff",
+    "importance": 38
+  },
+  {
+    "feature": "AMT_REQ_CREDIT_BUREAU_MON",
+    "importance": 37
+  },
+  {
+    "feature": "pos_IS_DPD_mean",
+    "importance": 37
+  },
+  {
+    "feature": "cc_IS_DPD_sum",
+    "importance": 37
+  },
+  {
+    "feature": "prev_status_Refused_sum",
+    "importance": 36
+  },
+  {
+    "feature": "ORGANIZATION_TYPE_Construction",
+    "importance": 36
+  },
+  {
+    "feature": "NAME_INCOME_TYPE_State servant",
+    "importance": 35
+  },
+  {
+    "feature": "NAME_INCOME_TYPE_Working",
+    "importance": 35
+  },
+  {
+    "feature": "ORGANIZATION_TYPE_Transport: type 3",
+    "importance": 34
+  },
+  {
+    "feature": "CNT_FAM_MEMBERS",
+    "importance": 33
+  },
+  {
+    "feature": "inst_IS_UNDERPAID_sum",
+    "importance": 33
+  },
+  {
+    "feature": "ORGANIZATION_TYPE_Industry: type 9",
+    "importance": 33
+  },
+  {
+    "feature": "ORGANIZATION_TYPE_School",
+    "importance": 33
+  },
+  {
+    "feature": "FLAG_DOCUMENT_16",
+    "importance": 32
+  },
+  {
+    "feature": "cc_AMT_DRAWINGS_CURRENT_sum",
+    "importance": 32
+  },
+  {
+    "feature": "cc_IS_DPD_mean",
+    "importance": 32
+  },
+  {
+    "feature": "CNT_CHILDREN",
+    "importance": 31
+  },
+  {
+    "feature": "NONLIVINGAPARTMENTS_AVG",
+    "importance": 31
+  },
+  {
+    "feature": "ORGANIZATION_TYPE_Military",
+    "importance": 31
+  },
+  {
+    "feature": "ELEVATORS_AVG",
+    "importance": 30
+  },
+  {
+    "feature": "NAME_CONTRACT_TYPE_Cash loans",
+    "importance": 29
+  },
+  {
+    "feature": "FLAG_OWN_CAR_Y",
+    "importance": 29
+  },
+  {
+    "feature": "ENTRANCES_MODE",
+    "importance": 27
+  },
+  {
+    "feature": "OCCUPATION_TYPE_Drivers",
+    "importance": 27
+  },
+  {
+    "feature": "FLOORSMIN_AVG",
+    "importance": 26
+  },
+  {
+    "feature": "ORGANIZATION_TYPE_Business Entity Type 3",
+    "importance": 26
+  },
+  {
+    "feature": "FLOORSMAX_MODE",
+    "importance": 25
+  },
+  {
+    "feature": "FLOORSMAX_MEDI",
+    "importance": 25
+  },
+  {
+    "feature": "FLAG_OWN_REALTY_N",
+    "importance": 25
+  },
+  {
+    "feature": "NAME_HOUSING_TYPE_House / apartment",
+    "importance": 24
+  },
+  {
+    "feature": "ENTRANCES_MEDI",
+    "importance": 23
+  },
+  {
+    "feature": "FLAG_DOCUMENT_13",
+    "importance": 23
+  },
+  {
+    "feature": "REGION_RATING_CLIENT",
+    "importance": 22
+  },
+  {
+    "feature": "NAME_EDUCATION_TYPE_Academic degree",
+    "importance": 22
+  },
+  {
+    "feature": "bur_bb_dpd_positive_months_sum",
+    "importance": 21
+  },
+  {
+    "feature": "OCCUPATION_TYPE_Accountants",
+    "importance": 21
+  },
+  {
+    "feature": "WEEKDAY_APPR_PROCESS_START_MONDAY",
+    "importance": 21
+  },
+  {
+    "feature": "AMT_REQ_CREDIT_BUREAU_WEEK",
+    "importance": 20
+  },
+  {
+    "feature": "NAME_FAMILY_STATUS_Single / not married",
+    "importance": 20
+  },
+  {
+    "feature": "WALLSMATERIAL_MODE_Stone, brick",
+    "importance": 20
+  },
+  {
+    "feature": "WEEKDAY_APPR_PROCESS_START_WEDNESDAY",
+    "importance": 19
+  },
+  {
+    "feature": "ORGANIZATION_TYPE_Kindergarten",
+    "importance": 19
+  },
+  {
+    "feature": "FLOORSMIN_MODE",
+    "importance": 18
+  },
+  {
+    "feature": "FLOORSMIN_MEDI",
+    "importance": 18
+  },
+  {
+    "feature": "cc_SK_DPD_mean",
+    "importance": 18
+  },
+  {
+    "feature": "OCCUPATION_TYPE_Sales staff",
+    "importance": 18
+  },
+  {
+    "feature": "WEEKDAY_APPR_PROCESS_START_TUESDAY",
+    "importance": 18
+  },
+  {
+    "feature": "ORGANIZATION_TYPE_Realtor",
+    "importance": 18
+  },
+  {
+    "feature": "WEEKDAY_APPR_PROCESS_START_THURSDAY",
+    "importance": 17
+  },
+  {
+    "feature": "ORGANIZATION_TYPE_Bank",
+    "importance": 17
+  },
+  {
+    "feature": "FLAG_DOCUMENT_11",
+    "importance": 16
+  },
+  {
+    "feature": "NAME_CONTRACT_TYPE_Revolving loans",
+    "importance": 16
+  },
+  {
+    "feature": "NAME_EDUCATION_TYPE_Incomplete higher",
+    "importance": 16
+  },
+  {
+    "feature": "NAME_EDUCATION_TYPE_Lower secondary",
+    "importance": 16
+  },
+  {
+    "feature": "ORGANIZATION_TYPE_Police",
+    "importance": 16
+  },
+  {
+    "feature": "ELEVATORS_MODE",
+    "importance": 15
+  },
+  {
+    "feature": "WEEKDAY_APPR_PROCESS_START_SUNDAY",
+    "importance": 15
+  },
+  {
+    "feature": "ORGANIZATION_TYPE_Security Ministries",
+    "importance": 15
+  },
+  {
+    "feature": "NONLIVINGAPARTMENTS_MEDI",
+    "importance": 14
+  },
+  {
+    "feature": "NAME_TYPE_SUITE_Unaccompanied",
+    "importance": 14
+  },
+  {
+    "feature": "ORGANIZATION_TYPE_Trade: type 2",
+    "importance": 14
+  },
+  {
+    "feature": "FLAG_EMP_PHONE",
+    "importance": 13
+  },
+  {
+    "feature": "LIVE_CITY_NOT_WORK_CITY",
+    "importance": 13
+  },
+  {
+    "feature": "ELEVATORS_MEDI",
+    "importance": 13
+  },
+  {
+    "feature": "NAME_HOUSING_TYPE_Office apartment",
+    "importance": 13
+  },
+  {
+    "feature": "WEEKDAY_APPR_PROCESS_START_SATURDAY",
+    "importance": 13
+  },
+  {
+    "feature": "pos_IS_DPD_DEF_sum",
+    "importance": 12
+  },
+  {
+    "feature": "FLAG_PHONE",
+    "importance": 11
+  },
+  {
+    "feature": "FLAG_DOCUMENT_15",
+    "importance": 11
+  },
+  {
+    "feature": "cc_SK_DPD_max",
+    "importance": 11
+  },
+  {
+    "feature": "NAME_HOUSING_TYPE_Municipal apartment",
+    "importance": 11
+  },
+  {
+    "feature": "WEEKDAY_APPR_PROCESS_START_FRIDAY",
+    "importance": 11
+  },
+  {
+    "feature": "FLAG_DOCUMENT_8",
+    "importance": 10
+  },
+  {
+    "feature": "bur_bb_dpd_max_max",
+    "importance": 10
+  },
+  {
+    "feature": "OCCUPATION_TYPE_High skill tech staff",
+    "importance": 10
+  },
+  {
+    "feature": "OCCUPATION_TYPE_Medicine staff",
+    "importance": 10
+  },
+  {
+    "feature": "REG_CITY_NOT_WORK_CITY",
+    "importance": 9
+  },
+  {
+    "feature": "FLAG_DOCUMENT_14",
+    "importance": 9
+  },
+  {
+    "feature": "FLAG_OWN_REALTY_Y",
+    "importance": 9
+  },
+  {
+    "feature": "NAME_TYPE_SUITE_Spouse, partner",
+    "importance": 9
+  },
+  {
+    "feature": "NAME_INCOME_TYPE_Commercial associate",
+    "importance": 9
+  },
+  {
+    "feature": "NAME_FAMILY_STATUS_Separated",
+    "importance": 9
+  },
+  {
+    "feature": "OCCUPATION_TYPE_Low-skill Laborers",
+    "importance": 9
+  },
+  {
+    "feature": "NAME_TYPE_SUITE_Family",
+    "importance": 8
+  },
+  {
+    "feature": "OCCUPATION_TYPE_Cleaning staff",
+    "importance": 8
+  },
+  {
+    "feature": "OCCUPATION_TYPE_Laborers",
+    "importance": 8
+  },
+  {
+    "feature": "AMT_REQ_CREDIT_BUREAU_DAY",
+    "importance": 7
+  },
+  {
+    "feature": "NAME_TYPE_SUITE_Children",
+    "importance": 7
+  },
+  {
+    "feature": "NAME_INCOME_TYPE_Pensioner",
+    "importance": 7
+  },
+  {
+    "feature": "NAME_FAMILY_STATUS_Widow",
+    "importance": 7
+  },
+  {
+    "feature": "bur_CREDIT_DAY_OVERDUE_max",
+    "importance": 6
+  },
+  {
+    "feature": "FONDKAPREMONT_MODE_reg oper account",
+    "importance": 6
+  },
+  {
+    "feature": "WALLSMATERIAL_MODE_Others",
+    "importance": 6
+  },
+  {
+    "feature": "REG_REGION_NOT_WORK_REGION",
+    "importance": 5
+  },
+  {
+    "feature": "NAME_FAMILY_STATUS_Civil marriage",
+    "importance": 5
+  },
+  {
+    "feature": "NAME_HOUSING_TYPE_Rented apartment",
+    "importance": 5
+  },
+  {
+    "feature": "ORGANIZATION_TYPE_Business Entity Type 2",
+    "importance": 5
+  },
+  {
+    "feature": "ORGANIZATION_TYPE_Medicine",
+    "importance": 5
+  },
+  {
+    "feature": "ORGANIZATION_TYPE_Other",
+    "importance": 5
+  },
+  {
+    "feature": "ORGANIZATION_TYPE_Trade: type 6",
+    "importance": 5
+  },
+  {
+    "feature": "WALLSMATERIAL_MODE_Block",
+    "importance": 5
+  },
+  {
+    "feature": "REG_REGION_NOT_LIVE_REGION",
+    "importance": 4
+  },
+  {
+    "feature": "FLAG_DOCUMENT_6",
+    "importance": 4
+  },
+  {
+    "feature": "prev_status_Unused offer_sum",
+    "importance": 4
+  },
+  {
+    "feature": "NAME_HOUSING_TYPE_With parents",
+    "importance": 4
+  },
+  {
+    "feature": "OCCUPATION_TYPE_Cooking staff",
+    "importance": 4
+  },
+  {
+    "feature": "OCCUPATION_TYPE_Managers",
+    "importance": 4
+  },
+  {
+    "feature": "ORGANIZATION_TYPE_Government",
+    "importance": 4
+  },
+  {
+    "feature": "ORGANIZATION_TYPE_Legal Services",
+    "importance": 4
+  },
+  {
+    "feature": "ORGANIZATION_TYPE_Telecom",
+    "importance": 4
+  },
+  {
+    "feature": "FLAG_EMAIL",
+    "importance": 3
+  },
+  {
+    "feature": "bur_CREDIT_DAY_OVERDUE_mean",
+    "importance": 3
+  },
+  {
+    "feature": "bur_AMT_CREDIT_SUM_OVERDUE_mean",
+    "importance": 3
+  },
+  {
+    "feature": "ORGANIZATION_TYPE_Industry: type 12",
+    "importance": 3
+  },
+  {
+    "feature": "ORGANIZATION_TYPE_Trade: type 3",
+    "importance": 3
+  },
+  {
+    "feature": "ORGANIZATION_TYPE_Trade: type 7",
+    "importance": 3
+  },
+  {
+    "feature": "ORGANIZATION_TYPE_Transport: type 4",
+    "importance": 3
+  },
+  {
+    "feature": "FONDKAPREMONT_MODE_reg oper spec account",
+    "importance": 3
+  },
+  {
+    "feature": "WALLSMATERIAL_MODE_Panel",
+    "importance": 3
+  },
+  {
+    "feature": "LIVE_REGION_NOT_WORK_REGION",
+    "importance": 2
+  },
+  {
+    "feature": "DAYS_EMPLOYED_ANOM",
+    "importance": 2
+  },
+  {
+    "feature": "ORGANIZATION_TYPE_Business Entity Type 1",
+    "importance": 2
+  },
+  {
+    "feature": "ORGANIZATION_TYPE_Industry: type 11",
+    "importance": 2
+  },
+  {
+    "feature": "ORGANIZATION_TYPE_Restaurant",
+    "importance": 2
+  },
+  {
+    "feature": "ORGANIZATION_TYPE_Transport: type 2",
+    "importance": 2
+  },
+  {
+    "feature": "FONDKAPREMONT_MODE_not specified",
+    "importance": 2
+  },
+  {
+    "feature": "FONDKAPREMONT_MODE_org spec account",
+    "importance": 2
+  },
+  {
+    "feature": "NAME_TYPE_SUITE_Other_B",
+    "importance": 1
+  },
+  {
+    "feature": "OCCUPATION_TYPE_Secretaries",
+    "importance": 1
+  },
+  {
+    "feature": "OCCUPATION_TYPE_Waiters/barmen staff",
+    "importance": 1
+  },
+  {
+    "feature": "ORGANIZATION_TYPE_Agriculture",
+    "importance": 1
+  },
+  {
+    "feature": "ORGANIZATION_TYPE_Electricity",
+    "importance": 1
+  },
+  {
+    "feature": "ORGANIZATION_TYPE_Hotel",
+    "importance": 1
+  },
+  {
+    "feature": "ORGANIZATION_TYPE_Housing",
+    "importance": 1
+  },
+  {
+    "feature": "ORGANIZATION_TYPE_Industry: type 4",
+    "importance": 1
+  },
+  {
+    "feature": "ORGANIZATION_TYPE_Postal",
+    "importance": 1
+  },
+  {
+    "feature": "HOUSETYPE_MODE_specific housing",
+    "importance": 1
+  },
+  {
+    "feature": "WALLSMATERIAL_MODE_Wooden",
+    "importance": 1
+  },
+  {
+    "feature": "EMERGENCYSTATE_MODE_No",
+    "importance": 1
+  },
+  {
+    "feature": "EMERGENCYSTATE_MODE_Yes",
+    "importance": 1
+  },
+  {
+    "feature": "FLAG_MOBIL",
+    "importance": 0
+  },
+  {
+    "feature": "FLAG_CONT_MOBILE",
+    "importance": 0
+  },
+  {
+    "feature": "FLAG_DOCUMENT_2",
+    "importance": 0
+  },
+  {
+    "feature": "FLAG_DOCUMENT_4",
+    "importance": 0
+  },
+  {
+    "feature": "FLAG_DOCUMENT_5",
+    "importance": 0
+  },
+  {
+    "feature": "FLAG_DOCUMENT_7",
+    "importance": 0
+  },
+  {
+    "feature": "FLAG_DOCUMENT_9",
+    "importance": 0
+  },
+  {
+    "feature": "FLAG_DOCUMENT_10",
+    "importance": 0
+  },
+  {
+    "feature": "FLAG_DOCUMENT_12",
+    "importance": 0
+  },
+  {
+    "feature": "FLAG_DOCUMENT_17",
+    "importance": 0
+  },
+  {
+    "feature": "FLAG_DOCUMENT_19",
+    "importance": 0
+  },
+  {
+    "feature": "FLAG_DOCUMENT_20",
+    "importance": 0
+  },
+  {
+    "feature": "FLAG_DOCUMENT_21",
+    "importance": 0
+  },
+  {
+    "feature": "AMT_REQ_CREDIT_BUREAU_HOUR",
+    "importance": 0
+  },
+  {
+    "feature": "bur_CREDIT_DAY_OVERDUE_sum",
+    "importance": 0
+  },
+  {
+    "feature": "CODE_GENDER_XNA",
+    "importance": 0
+  },
+  {
+    "feature": "NAME_TYPE_SUITE_Group of people",
+    "importance": 0
+  },
+  {
+    "feature": "NAME_TYPE_SUITE_Other_A",
+    "importance": 0
+  },
+  {
+    "feature": "NAME_INCOME_TYPE_Businessman",
+    "importance": 0
+  },
+  {
+    "feature": "NAME_INCOME_TYPE_Maternity leave",
+    "importance": 0
+  },
+  {
+    "feature": "NAME_INCOME_TYPE_Student",
+    "importance": 0
+  },
+  {
+    "feature": "NAME_INCOME_TYPE_Unemployed",
+    "importance": 0
+  },
+  {
+    "feature": "NAME_FAMILY_STATUS_Unknown",
+    "importance": 0
+  },
+  {
+    "feature": "NAME_HOUSING_TYPE_Co-op apartment",
+    "importance": 0
+  },
+  {
+    "feature": "OCCUPATION_TYPE_HR staff",
+    "importance": 0
+  },
+  {
+    "feature": "OCCUPATION_TYPE_IT staff",
+    "importance": 0
+  },
+  {
+    "feature": "OCCUPATION_TYPE_Private service staff",
+    "importance": 0
+  },
+  {
+    "feature": "OCCUPATION_TYPE_Realty agents",
+    "importance": 0
+  },
+  {
+    "feature": "OCCUPATION_TYPE_Security staff",
+    "importance": 0
+  },
+  {
+    "feature": "ORGANIZATION_TYPE_Advertising",
+    "importance": 0
+  },
+  {
+    "feature": "ORGANIZATION_TYPE_Cleaning",
+    "importance": 0
+  },
+  {
+    "feature": "ORGANIZATION_TYPE_Culture",
+    "importance": 0
+  },
+  {
+    "feature": "ORGANIZATION_TYPE_Emergency",
+    "importance": 0
+  },
+  {
+    "feature": "ORGANIZATION_TYPE_Industry: type 1",
+    "importance": 0
+  },
+  {
+    "feature": "ORGANIZATION_TYPE_Industry: type 10",
+    "importance": 0
+  },
+  {
+    "feature": "ORGANIZATION_TYPE_Industry: type 13",
+    "importance": 0
+  },
+  {
+    "feature": "ORGANIZATION_TYPE_Industry: type 2",
+    "importance": 0
+  },
+  {
+    "feature": "ORGANIZATION_TYPE_Industry: type 3",
+    "importance": 0
+  },
+  {
+    "feature": "ORGANIZATION_TYPE_Industry: type 5",
+    "importance": 0
+  },
+  {
+    "feature": "ORGANIZATION_TYPE_Industry: type 6",
+    "importance": 0
+  },
+  {
+    "feature": "ORGANIZATION_TYPE_Industry: type 7",
+    "importance": 0
+  },
+  {
+    "feature": "ORGANIZATION_TYPE_Industry: type 8",
+    "importance": 0
+  },
+  {
+    "feature": "ORGANIZATION_TYPE_Insurance",
+    "importance": 0
+  },
+  {
+    "feature": "ORGANIZATION_TYPE_Mobile",
+    "importance": 0
+  },
+  {
+    "feature": "ORGANIZATION_TYPE_Religion",
+    "importance": 0
+  },
+  {
+    "feature": "ORGANIZATION_TYPE_Security",
+    "importance": 0
+  },
+  {
+    "feature": "ORGANIZATION_TYPE_Services",
+    "importance": 0
+  },
+  {
+    "feature": "ORGANIZATION_TYPE_Trade: type 1",
+    "importance": 0
+  },
+  {
+    "feature": "ORGANIZATION_TYPE_Trade: type 4",
+    "importance": 0
+  },
+  {
+    "feature": "ORGANIZATION_TYPE_Trade: type 5",
+    "importance": 0
+  },
+  {
+    "feature": "ORGANIZATION_TYPE_Transport: type 1",
+    "importance": 0
+  },
+  {
+    "feature": "ORGANIZATION_TYPE_University",
+    "importance": 0
+  },
+  {
+    "feature": "ORGANIZATION_TYPE_XNA",
+    "importance": 0
+  },
+  {
+    "feature": "HOUSETYPE_MODE_block of flats",
+    "importance": 0
+  },
+  {
+    "feature": "HOUSETYPE_MODE_terraced house",
+    "importance": 0
+  },
+  {
+    "feature": "WALLSMATERIAL_MODE_Mixed",
+    "importance": 0
+  },
+  {
+    "feature": "WALLSMATERIAL_MODE_Monolithic",
+    "importance": 0
+  }
+]

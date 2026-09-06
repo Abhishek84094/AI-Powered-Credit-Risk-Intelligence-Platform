@@ -1,0 +1,45 @@
+{
+  "model_type": "LightGBM + Isotonic Calibration",
+  "n_features": 339,
+  "n_train_samples": 276759,
+  "default_rate_pct": 8.07,
+  "brier_score_base": 0.169,
+  "brier_score_calibrated": 0.0658,
+  "risk_thresholds": {
+    "low_threshold": 0.05,
+    "high_threshold": 0.2,
+    "band_dist": {
+      "LOW": 0.5706,
+      "MEDIUM": 0.3265,
+      "HIGH": 0.1029
+    },
+    "actual_default_rates": {
+      "LOW": 0.0121,
+      "MEDIUM": 0.1113,
+      "HIGH": 0.3646
+    }
+  },
+  "best_hyperparams": {
+    "n_estimators": 600,
+    "learning_rate": 0.03,
+    "num_leaves": 45,
+    "min_child_samples": 50,
+    "subsample": 0.8,
+    "colsample_bytree": 0.7,
+    "reg_alpha": 0.1,
+    "reg_lambda": 1.0,
+    "scale_pos_weight": 11.4
+  },
+  "top_10_features": [
+    "EXT_SOURCE_MEAN",
+    "CREDIT_TO_GOODS",
+    "EXT_SOURCE_1",
+    "AMT_ANNUITY",
+    "pos_CNT_INSTALMENT_FUTURE_mean",
+    "EXT_SOURCE_2",
+    "EXT_SOURCE_3",
+    "DAYS_BIRTH",
+    "DAYS_ID_PUBLISH",
+    "EXT_SOURCE_PRODUCT"
+  ]
+}

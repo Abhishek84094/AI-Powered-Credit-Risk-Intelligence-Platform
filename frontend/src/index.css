@@ -1,0 +1,181 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+:root {
+  --brand-primary: #6366f1;
+  --brand-secondary: #8b5cf6;
+  --brand-accent: #06b6d4;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+  --success: #10b981;
+  --dark-bg: #080b14;
+  --dark-surface: #0d1117;
+  --dark-card: #111827;
+  --dark-border: #1f2937;
+  --dark-border-hover: #374151;
+  --text-primary: #f9fafb;
+  --text-secondary: #9ca3af;
+  --text-muted: #6b7280;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background-color: var(--dark-bg);
+  color: var(--text-primary);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Custom scrollbar ─────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--dark-surface); }
+::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #4b5563; }
+
+/* ── Glass morphism utilities ─────────────────────────────── */
+.glass {
+  background: rgba(17, 24, 39, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(99, 102, 241, 0.15);
+}
+
+.glass-light {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* ── Gradient text ────────────────────────────────────────── */
+.gradient-text {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6, #06b6d4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-text-warm {
+  background: linear-gradient(135deg, #f59e0b, #ef4444);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Glow effects ─────────────────────────────────────────── */
+.glow-primary { box-shadow: 0 0 20px rgba(99, 102, 241, 0.3); }
+.glow-success { box-shadow: 0 0 20px rgba(16, 185, 129, 0.3); }
+.glow-danger { box-shadow: 0 0 20px rgba(239, 68, 68, 0.3); }
+.glow-warning { box-shadow: 0 0 20px rgba(245, 158, 11, 0.3); }
+
+/* ── Risk badge styles ────────────────────────────────────── */
+.badge-low {
+  background: linear-gradient(135deg, rgba(16,185,129,0.2), rgba(5,150,105,0.15));
+  border: 1px solid rgba(16,185,129,0.4);
+  color: #34d399;
+}
+.badge-medium {
+  background: linear-gradient(135deg, rgba(245,158,11,0.2), rgba(217,119,6,0.15));
+  border: 1px solid rgba(245,158,11,0.4);
+  color: #fbbf24;
+}
+.badge-high {
+  background: linear-gradient(135deg, rgba(239,68,68,0.2), rgba(185,28,28,0.15));
+  border: 1px solid rgba(239,68,68,0.4);
+  color: #f87171;
+}
+
+/* ── Animations ───────────────────────────────────────────── */
+@keyframes pulse-ring {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(99,102,241,0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(99,102,241,0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(99,102,241,0); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes scan-line {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+
+.animate-pulse-ring { animation: pulse-ring 2s infinite; }
+.animate-float { animation: float 3s ease-in-out infinite; }
+
+.shimmer-bg {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* ── Risk gauge ───────────────────────────────────────────── */
+.risk-gauge-svg circle {
+  transition: stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Navigation active state ──────────────────────────────── */
+.nav-item-active {
+  background: linear-gradient(135deg, rgba(99,102,241,0.2), rgba(139,92,246,0.15));
+  border-left: 3px solid #6366f1;
+  color: #818cf8;
+}
+
+/* ── Card hover effects ───────────────────────────────────── */
+.metric-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(99,102,241,0.15);
+}
+
+/* ── Input styling ────────────────────────────────────────── */
+.form-input {
+  background: rgba(17, 24, 39, 0.8);
+  border: 1px solid var(--dark-border);
+  color: var(--text-primary);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.form-input:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
+  outline: none;
+}
+
+/* ── Chat bubble ──────────────────────────────────────────── */
+.chat-bubble-user {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+}
+.chat-bubble-assistant {
+  background: rgba(17, 24, 39, 0.9);
+  border: 1px solid var(--dark-border);
+}
+
+/* ── Progress bar ─────────────────────────────────────────── */
+.progress-bar {
+  transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Skeleton loader ──────────────────────────────────────── */
+.skeleton {
+  background: linear-gradient(90deg, #1f2937 25%, #374151 50%, #1f2937 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+}

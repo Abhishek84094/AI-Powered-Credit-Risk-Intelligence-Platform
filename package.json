@@ -1,0 +1,10 @@
+{
+  "name": "credpulse-credit-risk-platform",
+  "version": "1.0.0",
+  "description": "AI-Powered Credit Risk Intelligence Platform",
+  "scripts": {
+    "dev": "npm --prefix frontend run dev",
+    "build": "npm --prefix frontend run build",
+    "start": "py -3 app/main.py"
+  }
+}

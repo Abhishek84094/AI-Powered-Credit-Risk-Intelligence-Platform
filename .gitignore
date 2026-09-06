@@ -1,0 +1,65 @@
+# Environment and secrets
+.env
+*.env
+*.pem
+*.key
+
+# Data files (Kaggle dataset files are >100MB, exceeding GitHub limits)
+data/
+*.csv
+!experiments/*.csv
+*.tsv
+*.zip
+*.tar.gz
+
+# SQLite database (>100MB)
+*.db*
+*.sqlite*
+sql/*.db*
+
+# Python cache and environments
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Jupyter
+.ipynb_checkpoints
+
+# Node.js
+node_modules/
+frontend/node_modules/
+frontend/dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# IDE & OS
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db

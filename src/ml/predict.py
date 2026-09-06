@@ -1,0 +1,158 @@
+"""
+CredPulse Credit Risk Intelligence Platform
+ML Inference Module — Real-time scoring and risk band assignment.
+"""
+
+import json
+import logging
+import os
+import time
+
+import joblib
+import numpy as np
+import pandas as pd
+
+logger = logging.getLogger(__name__)
+
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+MODELS_DIR = os.path.join(ROOT, "models")
+
+
+def _load_artifacts():
+    """Load saved model artifacts. Raises if artifacts missing."""
+    pipeline_path = os.path.join(MODELS_DIR, "pipeline.pkl")
+    model_path = os.path.join(MODELS_DIR, "lgbm_calibrated.pkl")
+    thresh_path = os.path.join(MODELS_DIR, "risk_thresholds.json")
+    feat_path = os.path.join(MODELS_DIR, "feature_names.json")
+
+    for p in [pipeline_path, model_path, thresh_path, feat_path]:
+        if not os.path.exists(p):
+            raise FileNotFoundError(f"Model artifact not found: {p}. Run src/ml/train.py first.")
+
+    pipeline = joblib.load(pipeline_path)
+    model = joblib.load(model_path)
+    with open(thresh_path) as f:
+        thresholds = json.load(f)
+    with open(feat_path) as f:
+        feature_names = json.load(f)
+    return pipeline, model, thresholds, feature_names
+
+
+# Cached artifacts for fast repeated inference
+_ARTIFACTS = None
+
+
+def _get_artifacts():
+    global _ARTIFACTS
+    if _ARTIFACTS is None:
+        _ARTIFACTS = _load_artifacts()
+    return _ARTIFACTS
+
+
+def assign_risk_band(prob: float, thresholds: dict) -> str:
+    """Assign LOW / MEDIUM / HIGH based on validated thresholds."""
+    low_t = thresholds.get("low_threshold", 0.05)
+    high_t = thresholds.get("high_threshold", 0.20)
+    if prob < low_t:
+        return "LOW"
+    elif prob < high_t:
+        return "MEDIUM"
+    else:
+        return "HIGH"
+
+
+def prepare_applicant_df(applicant_data: dict, pipeline) -> pd.DataFrame:
+    """Prepare and align single applicant features to pipeline input schema."""
+    df = pd.DataFrame([applicant_data])
+
+    # Ensure DAYS_EMPLOYED anomaly handled
+    if "DAYS_EMPLOYED" in df.columns:
+        df["DAYS_EMPLOYED_ANOM"] = (df["DAYS_EMPLOYED"] == 365243).astype(int)
+        df["DAYS_EMPLOYED"] = df["DAYS_EMPLOYED"].replace(365243, np.nan)
+    if "DAYS_BIRTH" in df.columns:
+        df["APPLICANT_AGE_YEARS"] = -df["DAYS_BIRTH"] / 365.25
+    if "DAYS_EMPLOYED" in df.columns:
+        df["EMPLOYED_YEARS"] = -df["DAYS_EMPLOYED"] / 365.25
+
+    # Financial ratios
+    if all(c in df.columns for c in ["AMT_CREDIT", "AMT_INCOME_TOTAL"]):
+        df["DEBT_TO_INCOME"] = df["AMT_CREDIT"] / (df["AMT_INCOME_TOTAL"] + 1)
+    if all(c in df.columns for c in ["AMT_ANNUITY", "AMT_INCOME_TOTAL"]):
+        df["ANNUITY_TO_INCOME"] = df["AMT_ANNUITY"] / (df["AMT_INCOME_TOTAL"] + 1)
+    if all(c in df.columns for c in ["AMT_CREDIT", "AMT_GOODS_PRICE"]):
+        df["CREDIT_TO_GOODS"] = df["AMT_CREDIT"] / (df["AMT_GOODS_PRICE"].replace(0, np.nan) + 1)
+    if all(c in df.columns for c in ["AMT_INCOME_TOTAL", "CNT_FAM_MEMBERS"]):
+        df["INCOME_PER_PERSON"] = df["AMT_INCOME_TOTAL"] / (df["CNT_FAM_MEMBERS"].replace(0, np.nan) + 1)
+
+    # External source composite
+    ext_cols = [c for c in ["EXT_SOURCE_1", "EXT_SOURCE_2", "EXT_SOURCE_3"] if c in df.columns]
+    if ext_cols:
+        df["EXT_SOURCE_MEAN"] = df[ext_cols].mean(axis=1)
+        df["EXT_SOURCE_MIN"] = df[ext_cols].min(axis=1)
+        df["EXT_SOURCE_PRODUCT"] = df[ext_cols].prod(axis=1)
+
+    # Align to all pipeline expected features, imputing missing columns with NaN
+    if hasattr(pipeline, "feature_names_in_"):
+        missing_cols = [c for c in pipeline.feature_names_in_ if c not in df.columns]
+        if missing_cols:
+            missing_df = pd.DataFrame(np.nan, index=df.index, columns=missing_cols)
+            df = pd.concat([df, missing_df], axis=1)
+        df = df[pipeline.feature_names_in_]
+
+    return df
+
+
+def predict_single(applicant_data: dict) -> dict:
+    """
+    Score a single applicant.
+    applicant_data: dict mapping feature names to values.
+    Returns: {probability, risk_score_pct, risk_band, inference_time_ms}
+    """
+    pipeline, model, thresholds, feature_names = _get_artifacts()
+
+    df = prepare_applicant_df(applicant_data, pipeline)
+    t0 = time.time()
+    X_proc = pipeline.transform(df)
+    proba = model.predict_proba(X_proc)[0, 1]
+    inference_ms = (time.time() - t0) * 1000
+
+    risk_band = assign_risk_band(proba, thresholds)
+    return {
+        "default_probability": round(float(proba), 4),
+        "risk_score_pct": round(float(proba) * 100, 2),
+        "risk_band": risk_band,
+        "inference_time_ms": round(inference_ms, 1),
+    }
+
+
+def predict_batch(df: pd.DataFrame) -> pd.DataFrame:
+    """Score a batch of applicants."""
+    pipeline, model, thresholds, feature_names = _get_artifacts()
+    X_proc = pipeline.transform(df)
+    proba = model.predict_proba(X_proc)[:, 1]
+    bands = [assign_risk_band(p, thresholds) for p in proba]
+    result = df.copy()
+    result["default_probability"] = proba
+    result["risk_score_pct"] = proba * 100
+    result["risk_band"] = bands
+    return result
+
+
+def get_model_metadata() -> dict:
+    """Return model metadata for UI display."""
+    meta_path = os.path.join(MODELS_DIR, "model_metadata.json")
+    thresh_path = os.path.join(MODELS_DIR, "risk_thresholds.json")
+    feat_path = os.path.join(MODELS_DIR, "feature_importance.json")
+
+    result = {}
+    if os.path.exists(meta_path):
+        with open(meta_path) as f:
+            result["metadata"] = json.load(f)
+    if os.path.exists(thresh_path):
+        with open(thresh_path) as f:
+            result["thresholds"] = json.load(f)
+    if os.path.exists(feat_path):
+        with open(feat_path) as f:
+            importance_data = json.load(f)
+            result["top_features"] = importance_data[:20]
+    return result
