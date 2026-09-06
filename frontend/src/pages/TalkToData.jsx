@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   MessageSquare, Send, Sparkles, Database, Terminal, Shield, Check, Copy, AlertCircle, RefreshCw, Key, ChevronDown, ChevronUp
 } from 'lucide-react'
-import { sendChatMessage } from '../services/api'
+import { sendChatMessage, getHealth } from '../services/api'
 import toast from 'react-hot-toast'
 
 const SUGGESTED_QUERIES = [
@@ -29,6 +29,8 @@ export default function TalkToData() {
   const [apiKey, setApiKey] = useState('')
   const [showKeyConfig, setShowKeyConfig] = useState(false)
   const [copiedIndex, setCopiedIndex] = useState(null)
+  const [dbReady, setDbReady] = useState(true)
+  const [dbChecking, setDbChecking] = useState(true)
   const messagesEndRef = useRef(null)
 
   const scrollToBottom = () => {
@@ -36,10 +38,25 @@ export default function TalkToData() {
   }
 
   useEffect(() => {
+    getHealth()
+      .then(res => {
+        if (res && typeof res.database_ready === 'boolean') {
+          setDbReady(res.database_ready)
+        }
+      })
+      .catch(() => {})
+      .finally(() => setDbChecking(false))
+  }, [])
+
+  useEffect(() => {
     scrollToBottom()
   }, [messages, loading])
 
   const handleSend = async (textToSend = null) => {
+    if (!dbReady) {
+      toast.error('Talk-to-Data is disabled: Analytical database not initialized. Mount CSVs in ./data.')
+      return
+    }
     const queryText = (textToSend || input).trim()
     if (!queryText || loading) return
 
@@ -112,6 +129,28 @@ export default function TalkToData() {
           </button>
         </div>
       </div>
+
+      {/* Database Offline Banner if CSVs not mounted */}
+      {!dbReady && (
+        <div className="mt-4 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 text-amber-200">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-400 mt-0.5 shrink-0" />
+            <div>
+              <p className="text-sm font-semibold text-white">Talk-to-Data Engine Offline (Database Not Initialized)</p>
+              <p className="text-xs text-amber-300/80 mt-0.5 leading-relaxed">
+                The SQLite analytical database was not found because Home Credit CSV files were not detected in <code className="bg-gray-900 px-1.5 py-0.5 rounded text-amber-300 font-mono">./data</code>.
+                Place extracted CSVs in <code className="bg-gray-900 px-1.5 py-0.5 rounded text-emerald-400 font-mono">./data</code> before running <code className="bg-gray-900 px-1.5 py-0.5 rounded text-emerald-400 font-mono">docker-compose up</code> (or run <code className="bg-gray-900 px-1.5 py-0.5 rounded text-emerald-400 font-mono">py -3 sql/init_db.py</code>) to activate.
+              </p>
+              <p className="text-[11px] text-gray-400 mt-1">
+                Note: Risk Scoring, TreeSHAP Explainability, and Business Rules remain fully functional.
+              </p>
+            </div>
+          </div>
+          <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30 whitespace-nowrap">
+            Database Offline
+          </span>
+        </div>
+      )}
 
       {/* Groq Key Drawer */}
       <AnimatePresence>
@@ -265,8 +304,8 @@ export default function TalkToData() {
           <button
             key={i}
             onClick={() => handleSend(sq)}
-            disabled={loading}
-            className="px-3 py-1 rounded-full text-xs bg-gray-900 hover:bg-gray-800 text-gray-300 border border-gray-800 hover:border-indigo-500 whitespace-nowrap transition-all"
+            disabled={loading || !dbReady}
+            className="px-3 py-1 rounded-full text-xs bg-gray-900 hover:bg-gray-800 text-gray-300 border border-gray-800 hover:border-indigo-500 whitespace-nowrap transition-all disabled:opacity-40 disabled:hover:border-gray-800 disabled:cursor-not-allowed"
           >
             {sq}
           </button>
@@ -286,14 +325,18 @@ export default function TalkToData() {
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask a question about credit risk, defaults, loans, or applicants..."
-            disabled={loading}
-            className="w-full pl-4 pr-12 py-3.5 bg-gray-900/90 border border-gray-700 rounded-2xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 shadow-xl"
+            placeholder={
+              dbReady
+                ? "Ask a question about credit risk, defaults, loans, or applicants..."
+                : "Talk-to-Data disabled: place Home Credit CSVs in ./data and run sql/init_db.py to enable"
+            }
+            disabled={loading || !dbReady}
+            className="w-full pl-4 pr-12 py-3.5 bg-gray-900/90 border border-gray-700 rounded-2xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
           />
           <button
             type="submit"
-            disabled={loading || !input.trim()}
-            className="absolute right-2 p-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white disabled:opacity-40 disabled:hover:bg-indigo-600 transition-all shadow-md"
+            disabled={loading || !dbReady || !input.trim()}
+            className="absolute right-2 p-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white disabled:opacity-40 disabled:hover:bg-indigo-600 transition-all shadow-md disabled:cursor-not-allowed"
           >
             <Send className="w-4 h-4" />
           </button>

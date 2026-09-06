@@ -134,14 +134,15 @@ def explain_prediction(X_single: np.ndarray, feature_names: list[str]) -> dict:
         base_val = explainer.expected_value
 
     # Build contribution list
+    min_len = min(len(feature_names), len(sv), len(X_single))
     contributions = [
         {
-            "feature": fn,
-            "display_name": _display_name(fn),
+            "feature": feature_names[i],
+            "display_name": _display_name(feature_names[i]),
             "shap_value": round(float(sv[i]), 6),
             "feature_value": round(float(X_single[i]), 4) if not np.isnan(X_single[i]) else None,
         }
-        for i, fn in enumerate(feature_names)
+        for i in range(min_len)
     ]
     contributions.sort(key=lambda x: abs(x["shap_value"]), reverse=True)
 

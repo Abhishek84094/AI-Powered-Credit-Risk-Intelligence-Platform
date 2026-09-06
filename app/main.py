@@ -7,6 +7,7 @@ import json
 import logging
 import os
 import sys
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
@@ -27,10 +28,50 @@ except ImportError:
 logging.basicConfig(level=logging.INFO, format="%(levelname)s | %(message)s")
 logger = logging.getLogger(__name__)
 
+MODELS_DIR = os.path.join(ROOT, "models")
+_MODEL_LOAD_ERROR: Optional[str] = None
+
+def _models_ready() -> bool:
+    required = ["pipeline.pkl", "lgbm_calibrated.pkl", "lgbm_base.pkl",
+                "risk_thresholds.json", "feature_names.json"]
+    return all(os.path.exists(os.path.join(MODELS_DIR, f)) for f in required)
+
+def _db_ready() -> bool:
+    db_path = os.path.join(ROOT, "sql", "credit_risk.db")
+    return os.path.exists(db_path) and os.path.getsize(db_path) > 0
+
+def _verify_and_preload_models() -> bool:
+    """Startup verification: preload models and catch/log any sklearn/pickle incompatibility."""
+    global _MODEL_LOAD_ERROR
+    if not _models_ready():
+        logger.warning("Model files not found in %s. Run: py -3 src/ml/train.py", MODELS_DIR)
+        return False
+    try:
+        from src.ml.predict import _get_artifacts
+        _get_artifacts()
+        _MODEL_LOAD_ERROR = None
+        logger.info("[OK] Startup check: Model pipeline and calibrated LightGBM loaded successfully.")
+        return True
+    except Exception as e:
+        err_msg = (
+            f"model/sklearn version mismatch: Failed to unpickle model artifacts. "
+            f"Ensure environment has scikit-learn==1.6.1, lightgbm==4.7.0, numpy==1.26.4. "
+            f"Error details: {e}"
+        )
+        logger.error(err_msg)
+        _MODEL_LOAD_ERROR = err_msg
+        return False
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    _verify_and_preload_models()
+    yield
+
 app = FastAPI(
     title="CredPulse Credit Risk Intelligence Platform",
     description="AI-powered credit risk scoring, explainability, and analytics API",
     version="1.0.0",
+    lifespan=lifespan,
 )
 
 api_router = APIRouter()
@@ -43,17 +84,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ─── Models for Training Check ─────────────────────────────────────────────────
-MODELS_DIR = os.path.join(ROOT, "models")
-
-def _models_ready() -> bool:
-    required = ["pipeline.pkl", "lgbm_calibrated.pkl", "lgbm_base.pkl",
-                "risk_thresholds.json", "feature_names.json"]
-    return all(os.path.exists(os.path.join(MODELS_DIR, f)) for f in required)
-
-def _db_ready() -> bool:
-    db_path = os.path.join(ROOT, "sql", "credit_risk.db")
-    return os.path.exists(db_path)
 
 
 # ─── Pydantic Models ──────────────────────────────────────────────────────────
@@ -117,8 +147,9 @@ class ChatQuestion(BaseModel):
 def health():
     return {
         "status": "ok",
-        "models_ready": _models_ready(),
+        "models_ready": _models_ready() and (_MODEL_LOAD_ERROR is None),
         "database_ready": _db_ready(),
+        "model_load_error": _MODEL_LOAD_ERROR,
     }
 
 
@@ -126,14 +157,15 @@ def health():
 def status():
     from src.ml.predict import get_model_metadata
     meta = {}
-    if _models_ready():
+    if _models_ready() and (_MODEL_LOAD_ERROR is None):
         try:
             meta = get_model_metadata()
         except Exception as e:
             meta = {"error": str(e)}
     return {
-        "models_ready": _models_ready(),
+        "models_ready": _models_ready() and (_MODEL_LOAD_ERROR is None),
         "database_ready": _db_ready(),
+        "model_load_error": _MODEL_LOAD_ERROR,
         "metadata": meta,
     }
 
@@ -175,6 +207,11 @@ def predict(applicant: ApplicantInput):
             status_code=503,
             detail="Models not trained yet. Run: py -3 src/ml/train.py"
         )
+    if _MODEL_LOAD_ERROR:
+        raise HTTPException(
+            status_code=503,
+            detail=f"Model loading error: {_MODEL_LOAD_ERROR}"
+        )
     from src.ml.predict import predict_single
     features = {k: v for k, v in applicant.model_dump().items() if v is not None}
     try:
@@ -182,6 +219,8 @@ def predict(applicant: ApplicantInput):
         return result
     except Exception as e:
         logger.error("Prediction error: %s", e)
+        if "model/sklearn version mismatch" in str(e):
+            raise HTTPException(status_code=503, detail=str(e))
         raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
 
 
@@ -190,6 +229,11 @@ def predict_with_explanation(applicant: ApplicantInput):
     """Score + SHAP explanation for a single applicant."""
     if not _models_ready():
         raise HTTPException(status_code=503, detail="Models not ready.")
+    if _MODEL_LOAD_ERROR:
+        raise HTTPException(
+            status_code=503,
+            detail=f"Model loading error: {_MODEL_LOAD_ERROR}"
+        )
     from src.ml.predict import predict_single, _get_artifacts, prepare_applicant_df
     from src.explainability.explainer import explain_prediction, generate_plain_english_explanation
     from src.rules.rule_engine import evaluate_all_rules
@@ -282,7 +326,7 @@ def chat(question: ChatQuestion):
     if not _db_ready():
         raise HTTPException(
             status_code=503,
-            detail="Database not ready. Run: py -3 sql/init_db.py"
+            detail="Analytical database not initialized. Please place Home Credit CSVs in ./data and run 'python sql/init_db.py' to enable Talk-to-Data."
         )
     from src.talk_to_data.nl_to_sql import answer_question
     api_key = question.api_key or os.getenv("GROQ_API_KEY")

@@ -17,7 +17,20 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s | %(message)s")
 logger = logging.getLogger(__name__)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DATA_DIR = os.path.join(ROOT, "data", "home-credit-default-risk")
+
+def _resolve_data_dir() -> str:
+    env_dir = os.getenv("DATA_DIR")
+    if env_dir and os.path.exists(os.path.join(env_dir, "application_train.csv")):
+        return os.path.abspath(env_dir)
+    sub = os.path.join(ROOT, "data", "home-credit-default-risk")
+    if os.path.exists(os.path.join(sub, "application_train.csv")):
+        return os.path.abspath(sub)
+    flat = os.path.join(ROOT, "data")
+    if os.path.exists(os.path.join(flat, "application_train.csv")):
+        return os.path.abspath(flat)
+    return os.path.abspath(sub)
+
+DATA_DIR = _resolve_data_dir()
 DB_PATH = os.path.join(ROOT, "sql", "credit_risk.db")
 SCHEMA_PATH = os.path.join(ROOT, "sql", "schema.sql")
 

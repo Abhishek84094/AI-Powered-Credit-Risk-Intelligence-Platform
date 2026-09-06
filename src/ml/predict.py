@@ -29,8 +29,26 @@ def _load_artifacts():
         if not os.path.exists(p):
             raise FileNotFoundError(f"Model artifact not found: {p}. Run src/ml/train.py first.")
 
-    pipeline = joblib.load(pipeline_path)
-    model = joblib.load(model_path)
+    try:
+        pipeline = joblib.load(pipeline_path)
+    except Exception as e:
+        err_msg = (
+            f"model/sklearn version mismatch: Failed to unpickle preprocessor pipeline ({pipeline_path}). "
+            f"Ensure exact package versions (scikit-learn==1.6.1, numpy==1.26.4). Detail: {e}"
+        )
+        logger.error(err_msg)
+        raise RuntimeError(err_msg) from e
+
+    try:
+        model = joblib.load(model_path)
+    except Exception as e:
+        err_msg = (
+            f"model/sklearn version mismatch: Failed to unpickle model ({model_path}). "
+            f"Ensure exact package versions (scikit-learn==1.6.1, lightgbm==4.7.0, numpy==1.26.4). Detail: {e}"
+        )
+        logger.error(err_msg)
+        raise RuntimeError(err_msg) from e
+
     with open(thresh_path) as f:
         thresholds = json.load(f)
     with open(feat_path) as f:

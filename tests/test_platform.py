@@ -228,6 +228,33 @@ class TestCreditRiskPlatform(unittest.TestCase):
         self.assertIn("plain_explanation", data)
         self.assertIn("business_rules", data)
 
+    def test_data_preprocessor_pipeline(self):
+        """Verify that src.data package functions correctly and builds pipeline without error."""
+        import pandas as pd
+        from src.data.preprocessor import build_preprocessor, get_feature_columns, get_feature_names_out
+        from src.data.loader import verify_data_files
+
+        # Test preprocessor on a synthetic mini dataframe
+        df_sample = pd.DataFrame({
+            "SK_ID_CURR": [100001, 100002],
+            "AMT_INCOME_TOTAL": [150000.0, 200000.0],
+            "AMT_CREDIT": [500000.0, 600000.0],
+            "CODE_GENDER": ["F", "M"],
+            "NAME_CONTRACT_TYPE": ["Cash loans", "Revolving loans"],
+        })
+        num_cols, cat_cols = get_feature_columns(df_sample)
+        self.assertEqual(sorted(num_cols), ["AMT_CREDIT", "AMT_INCOME_TOTAL"])
+        self.assertEqual(sorted(cat_cols), ["CODE_GENDER", "NAME_CONTRACT_TYPE"])
+
+        preprocessor = build_preprocessor(num_cols, cat_cols)
+        X_proc = preprocessor.fit_transform(df_sample)
+        self.assertEqual(X_proc.shape[0], 2)
+
+        feat_names = get_feature_names_out(preprocessor, num_cols, cat_cols)
+        self.assertGreaterEqual(len(feat_names), 4)
+        self.assertIn("AMT_CREDIT", feat_names)
+
 
 if __name__ == "__main__":
     unittest.main()
+

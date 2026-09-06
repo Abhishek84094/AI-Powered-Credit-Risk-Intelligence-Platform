@@ -153,27 +153,33 @@ Visit **[http://localhost:5173](http://localhost:5173)**.
 
 ## Docker Deployment
 
-The project includes a production multi-stage `Dockerfile` and `docker-compose.yml`:
+The project is fully containerized with a self-sufficient multi-stage `Dockerfile` and `docker-compose.yml`:
+
+> [!IMPORTANT]
+> **Place the extracted Home Credit CSVs in `./data` before running `docker-compose up` — this is the only manual step required.**
+> On container startup, `docker-entrypoint.sh` automatically checks if `sql/credit_risk.db` exists. If not, and the CSVs are present in `./data`, it automatically executes `sql/init_db.py` to construct the analytical database before launching the server. If CSVs are not provided, the platform continues serving risk scoring, explainability, and business rules, while cleanly displaying an informative offline state for Talk-to-Data.
 
 ```bash
-# Build and run container
+# 1. Place Home Credit CSVs into ./data (e.g. ./data/application_train.csv or ./data/home-credit-default-risk/)
+
+# 2. Build and run container
 docker-compose up --build -d
 
-# Check container health
+# 3. Check container health
 docker ps
 ```
-The entire application is accessible at **http://localhost:8000**.
+The entire application is immediately accessible at **http://localhost:8000**.
 
 ---
 
 ## Running Test Suite
 
-Verify all system invariants, rule engines, SQL safety, and API endpoints:
+Verify all system invariants, data preprocessing pipelines, rule engines, SQL safety, and API endpoints:
 
 ```bash
-py -3 tests/test_platform.py
+py -3 -m pytest tests/test_platform.py -q
 ```
-*Expected output: 14 passing unit & integration tests.*
+*Expected output: 17 passing unit & integration tests (0 failures).*
 
 ---
 
@@ -182,9 +188,9 @@ py -3 tests/test_platform.py
 ```
 AI-Powered Credit Risk Intelligence Platform/
 ├── app/
-│   └── main.py                     # FastAPI REST API & SPA static serving
+│   └── main.py                     # FastAPI REST API & SPA static serving (with lifespan checks)
 ├── data/
-│   └── home-credit-default-risk/   # Raw Home Credit CSV dataset files
+│   └── home-credit-default-risk/   # Raw Home Credit CSV dataset files (mounted in Docker)
 ├── experiments/
 │   └── model_experiments.csv       # CV benchmark audit trail (EXP-01 - EXP-04)
 ├── frontend/
@@ -200,6 +206,7 @@ AI-Powered Credit Risk Intelligence Platform/
 │   ├── lgbm_base.pkl               # Uncalibrated gradient booster
 │   ├── pipeline.pkl                # Preprocessing pipeline
 │   ├── risk_thresholds.json        # Calibrated decision cut-points
+│   ├── feature_names.json          # Aligned feature column schema
 │   └── feature_importance.json     # TreeSHAP global importance ranking
 ├── reports/
 │   └── eda_summary.json            # Structured EDA distributions & insights
@@ -207,14 +214,16 @@ AI-Powered Credit Risk Intelligence Platform/
 │   ├── credit_risk.db              # SQLite analytical database (224MB)
 │   └── init_db.py                  # Database ETL loader
 ├── src/
-│   ├── data/                       # loader.py, preprocessor.py
-│   ├── explainability/             # explainer.py (TreeSHAP & waterfall)
-│   ├── ml/                         # train.py, predict.py
-│   ├── rules/                      # rule_engine.py (Layer 5)
-│   └── talk_to_data/               # nl_to_sql.py (Layer 6)
+│   ├── data/                       # Layer 1 & 2: __init__.py, loader.py, preprocessor.py
+│   ├── explainability/             # Layer 4: explainer.py (TreeSHAP & waterfall)
+│   ├── ml/                         # Layer 3: train.py, predict.py
+│   ├── rules/                      # Layer 5: rule_engine.py
+│   └── talk_to_data/               # Layer 6: nl_to_sql.py
 ├── tests/
-│   └── test_platform.py            # Unit & integration test suite
-├── Dockerfile                      # Multi-stage production container build
-├── docker-compose.yml              # Container orchestration
+│   └── test_platform.py            # Automated 17-test suite
+├── Dockerfile                      # Multi-stage production container build (python:3.10-slim)
+├── docker-compose.yml              # Container orchestration & volume mapping
+├── docker-entrypoint.sh            # Self-sufficient DB initialization & runtime launch
+├── requirements.txt                # Exact pinned dependencies (scikit-learn==1.6.1, lightgbm==4.7.0)
 └── README.md
 ```

@@ -151,10 +151,9 @@ def _evaluate_cv(model_factory, X: np.ndarray, y: np.ndarray,
 
 # ─── Feature matrix loading ───────────────────────────────────────────────────
 
-def _load_feature_matrix():
+def _load_feature_matrix(nrows: int | None = None):
     """Load the already-built feature matrix from Layer 2 artifacts."""
-    # The pipeline and feature names were saved during Layer 2
-    # Re-build feature matrix fresh (Layer 3 must re-aggregate from source)
+    # Re-build feature matrix fresh from source
     sys.path.insert(0, ROOT)
     from src.data.loader import build_feature_matrix, verify_data_files
     from src.data.preprocessor import (
@@ -166,7 +165,7 @@ def _load_feature_matrix():
     if not verify_data_files():
         raise RuntimeError("Dataset files missing. Check DATA_DIR in loader.py")
 
-    X_raw, y, idx = build_feature_matrix(split="train")
+    X_raw, y, idx = build_feature_matrix(split="train", nrows=nrows)
     logger.info("Feature matrix shape: %s", X_raw.shape)
     logger.info("Target distribution: %s | Default rate: %.2f%%",
                 str(y.value_counts().values), y.mean() * 100)
@@ -186,12 +185,12 @@ def _load_feature_matrix():
     # Save pipeline and feature names
     pipeline_path = os.path.join(MODELS_DIR, "pipeline.pkl")
     joblib.dump(preprocessor, pipeline_path)
-    logger.info("  ✓ Pipeline saved: %s", pipeline_path)
+    logger.info("  [OK] Pipeline saved: %s", pipeline_path)
 
     feat_names_path = os.path.join(MODELS_DIR, "feature_names.json")
     with open(feat_names_path, "w") as f:
         json.dump(feature_names, f)
-    logger.info("  ✓ Feature names saved: %s (%d features)", feat_names_path, len(feature_names))
+    logger.info("  [OK] Feature names saved: %s (%d features)", feat_names_path, len(feature_names))
 
     return X_proc, y.values, feature_names, preprocessor, numeric_cols, categorical_cols, X_raw
 
@@ -386,7 +385,7 @@ def train_final_model(X: np.ndarray, y: np.ndarray, best_params: dict,
     proba_cal = calibrated_model.predict_proba(X_cal)[:, 1]
     brier_base = brier_score_loss(y_cal, proba_base)
     brier_cal = brier_score_loss(y_cal, proba_cal)
-    logger.info("  Calibration improvement — Brier before: %.4f → after: %.4f",
+    logger.info("  Calibration improvement — Brier before: %.4f -> after: %.4f",
                 brier_base, brier_cal)
 
     # ─── Risk band thresholds ─────────────────────────────────────────────────
@@ -431,22 +430,22 @@ def train_final_model(X: np.ndarray, y: np.ndarray, best_params: dict,
 
     model_path = os.path.join(MODELS_DIR, "lgbm_calibrated.pkl")
     joblib.dump(calibrated_model, model_path)
-    logger.info("  ✓ Calibrated model saved: %s (%.1f KB)",
+    logger.info("  [OK] Calibrated model saved: %s (%.1f KB)",
                 model_path, os.path.getsize(model_path) / 1024)
 
     base_model_path = os.path.join(MODELS_DIR, "lgbm_base.pkl")
     joblib.dump(base_model, base_model_path)
-    logger.info("  ✓ Base model saved: %s", base_model_path)
+    logger.info("  [OK] Base model saved: %s", base_model_path)
 
     thresh_path = os.path.join(MODELS_DIR, "risk_thresholds.json")
     with open(thresh_path, "w") as f:
         json.dump(thresholds, f, indent=2)
-    logger.info("  ✓ Risk thresholds saved: %s", thresh_path)
+    logger.info("  [OK] Risk thresholds saved: %s", thresh_path)
 
     importance_path = os.path.join(MODELS_DIR, "feature_importance.json")
     with open(importance_path, "w") as f:
         json.dump([{"feature": k, "importance": int(v)} for k, v in feat_importance], f, indent=2)
-    logger.info("  ✓ Feature importance saved: %s", importance_path)
+    logger.info("  [OK] Feature importance saved: %s", importance_path)
 
     # Model metadata
     meta = {
@@ -463,25 +462,32 @@ def train_final_model(X: np.ndarray, y: np.ndarray, best_params: dict,
     meta_path = os.path.join(MODELS_DIR, "model_metadata.json")
     with open(meta_path, "w") as f:
         json.dump(meta, f, indent=2)
-    logger.info("  ✓ Model metadata saved: %s", meta_path)
+    logger.info("  [OK] Model metadata saved: %s", meta_path)
 
-    logger.info("  ✓ All model artifacts saved successfully.")
+    logger.info("  [OK] All model artifacts saved successfully.")
     return calibrated_model, thresholds
 
 
 # ─── Main training orchestration ─────────────────────────────────────────────
 
 def main():
+    import argparse
+    parser = argparse.ArgumentParser(description="CredPulse Model Training Pipeline")
+    parser.add_argument("--sample", type=int, default=None, help="Sample size (number of rows) for fast testing")
+    args, _ = parser.parse_known_args()
+
     logger.info("=" * 60)
     logger.info("  LAYER 3 — MACHINE LEARNING MODEL DEVELOPMENT")
     logger.info("  CredPulse Credit Risk Intelligence Platform")
+    if args.sample:
+        logger.info("  [SAMPLE RUN: %d rows]", args.sample)
     logger.info("=" * 60)
 
     # Step 1: Load feature matrix
     logger.info("\n" + "=" * 60)
     logger.info("  STEP 1: Loading and preparing feature matrix")
     logger.info("=" * 60)
-    X, y, feature_names, preprocessor, num_cols, cat_cols, X_raw = _load_feature_matrix()
+    X, y, feature_names, preprocessor, num_cols, cat_cols, X_raw = _load_feature_matrix(nrows=args.sample)
 
     # Step 2: Already logged inside _load_feature_matrix
 
@@ -520,7 +526,7 @@ def main():
     summary_cols = ["exp_id", "model", "roc_auc", "pr_auc", "f1", "brier_score", "train_time_s"]
     print(existing[summary_cols].to_string(index=False))
 
-    logger.info("\n✓ Layer 3 COMPLETE — All model artifacts saved to %s", MODELS_DIR)
+    logger.info("\n[OK] Layer 3 COMPLETE — All model artifacts saved to %s", MODELS_DIR)
 
 
 if __name__ == "__main__":

@@ -5,7 +5,7 @@
 *.key
 
 # Data files (Kaggle dataset files are >100MB, exceeding GitHub limits)
-data/
+/data/
 *.csv
 !experiments/*.csv
 *.tsv
