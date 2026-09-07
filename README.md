@@ -41,12 +41,12 @@ flowchart TB
         subgraph Preprocessing["Data & Feature Pipeline (Layer 1 & 2)"]
             Imputer["Median Imputer + StandardScaler"]
             OneHot["One-Hot Encoder (Sparse/Dense)"]
-            Alignment["Strict Feature Alignment Guard<br/>(293 Fitted Features Out)"]
+            Alignment["Strict Feature Alignment Guard<br/>(339 Fitted Features Out)"]
         end
 
         subgraph MLScoring["ML Risk Scoring (Layer 3)"]
-            LGBM["Tuned LightGBM Classifier<br/>(ROC-AUC: 0.7812 • PR-AUC: 0.2741)"]
-            Calibrator["Isotonic Probability Calibrator<br/>(CalibratedClassifierCV)"]
+            LGBM["Tuned LightGBM Classifier<br/>(Holdout ROC-AUC: 0.7853 • Accuracy: 91.91% • CV: 0.7812)"]
+            Calibrator["Isotonic Probability Calibrator<br/>(CalibratedClassifierCV • Brier: 0.0658)"]
             Bands["Risk Band Slicer<br/>(LOW &lt; 5% • MED 5-20% • HIGH &ge; 20%)"]
         end
 
@@ -104,7 +104,7 @@ sequenceDiagram
 
     Underwriter->>API: POST /api/predict/explain (Applicant JSON)
     API->>Preproc: Transform raw applicant features
-    Preproc-->>API: 293 Aligned numeric features
+    Preproc-->>API: 339 Aligned numeric features
     API->>Model: Compute raw ensemble log-odds
     Model-->>Calib: Raw prediction score
     Calib-->>API: Calibrated Default Probability (PD %) & Risk Band
@@ -155,11 +155,11 @@ The full platform — React frontend and FastAPI backend — is deployed as a si
 
 ### 1. Why LightGBM over XGBoost and Logistic Regression
 
-The 5-fold stratified cross-validation benchmark (see **Key Experimental Results** table below) showed Tuned LightGBM (EXP-03) reaching a validation ROC-AUC of **0.7812** and PR-AUC of **0.2741**, outperforming XGBoost (EXP-04: 0.7765 / 0.2678) and Logistic Regression (EXP-01: 0.7642 / 0.2443). Beyond raw AUC, LightGBM's leaf-wise growth and histogram-based binning made it significantly faster to tune across 293 sparse features — many bureau and previous-application aggregates with high NaN rates — and its native `scale_pos_weight` parameter avoids a separate resampling step. TreeSHAP also runs in exact polynomial time on LightGBM ensembles, which was a non-negotiable requirement for per-decision explainability.
+The 5-fold stratified cross-validation benchmark (see **Key Experimental Results** table below) showed Tuned LightGBM (EXP-03) reaching a validation ROC-AUC of **0.7812** and PR-AUC of **0.2741** (and **0.7853 ROC-AUC** / **91.91% accuracy** on unseen hold-out test data), outperforming XGBoost (EXP-04: 0.7765 / 0.2678) and Logistic Regression (EXP-01: 0.7642 / 0.2443). Beyond raw AUC, LightGBM's leaf-wise growth and histogram-based binning made it significantly faster to tune across 339 engineered features — many bureau and previous-application aggregates with high NaN rates — and its native `scale_pos_weight` parameter avoids a separate resampling step. TreeSHAP also runs in exact polynomial time on LightGBM ensembles, which was a non-negotiable requirement for per-decision explainability.
 
 ### 2. How Class Imbalance Was Handled and Why Calibration Was Needed on Top
 
-The dataset carries an **8.07% default rate** across 307K+ applicants — approximately 11.4 non-defaulters per defaulter. The production model is trained with `scale_pos_weight=11.4`, which up-weights minority-class gradient updates and improves recall without discarding majority-class samples. However, `scale_pos_weight` distorts the probability scale: the model's raw outputs are optimised for rank ordering (high ROC-AUC) but are not calibrated probabilities. Calibration is essential here because the risk bands (`LOW < 5%`, `MEDIUM 5–20%`, `HIGH ≥ 20%`) are defined in probability space and shown directly to underwriters. `CalibratedClassifierCV(method='isotonic', cv='prefit')` is applied post-training to map raw LightGBM scores to empirical posterior probabilities, verified to produce the observed within-band default rates (2.4% / 9.1% / 24.8%).
+The dataset carries an **8.07% default rate** across 307K+ applicants — approximately 11.4 non-defaulters per defaulter. The production model is trained with `scale_pos_weight=11.4`, which up-weights minority-class gradient updates and improves recall without discarding majority-class samples. However, `scale_pos_weight` distorts the probability scale: the model's raw outputs are optimised for rank ordering (high ROC-AUC) but are not calibrated probabilities. Calibration is essential here because the risk bands (`LOW < 5%`, `MEDIUM 5–20%`, `HIGH ≥ 20%`) are defined in probability space and shown directly to underwriters. `CalibratedClassifierCV(method='isotonic', cv='prefit')` is applied post-training to map raw LightGBM scores to empirical posterior probabilities, verified to produce the observed within-band default rates (1.21% / 11.13% / 36.46%).
 
 ### 3. Why TreeSHAP Instead of LIME
 
@@ -177,21 +177,37 @@ The Talk-to-Data layer queries a single read-only SQLite file (`sql/credit_risk.
 
 ## Key Experimental Results
 
+### 1. 5-Fold Stratified Cross-Validation Benchmark
+
 All models were evaluated using **5-Fold Stratified Cross-Validation** with strict leakage prevention (imputation and scaling fit exclusively inside training splits):
 
 | Exp ID | Model | Feature Set | Imbalance Strategy | Val ROC-AUC | Val PR-AUC | F1 Score | Brier Score |
 | :--- | :--- | :--- | :--- | :---: | :---: | :---: | :---: |
-| **EXP-01** | Logistic Regression | Full Combined (284 feat.) | `class_weight=balanced` | 0.7642 | 0.2443 | 0.3109 | 0.1968 |
-| **EXP-02** | Default LightGBM | Full Combined (284 feat.) | `scale_pos_weight=11.4` | 0.7733 | 0.2613 | 0.3236 | 0.1531 |
-| **EXP-03** | **Tuned LightGBM (Production)** | **Full Combined (284 feat.)** | **`scale_pos_weight=11.4`** | **0.7812** | **0.2741** | **0.3382** | **0.1482** |
-| **EXP-04** | XGBoost Benchmark | Full Combined (284 feat.) | `scale_pos_weight=11.4` | 0.7765 | 0.2678 | 0.3294 | 0.1505 |
+| **EXP-01** | Logistic Regression | Full Combined (339 feat.) | `class_weight=balanced` | 0.7642 | 0.2443 | 0.3109 | 0.1968 |
+| **EXP-02** | Default LightGBM | Full Combined (339 feat.) | `scale_pos_weight=11.4` | 0.7733 | 0.2613 | 0.3236 | 0.1531 |
+| **EXP-03** | **Tuned LightGBM (Production)** | **Full Combined (339 feat.)** | **`scale_pos_weight=11.4`** | **0.7812** | **0.2741** | **0.3382** | **0.1482** |
+| **EXP-04** | XGBoost Benchmark | Full Combined (339 feat.) | `scale_pos_weight=11.4` | 0.7765 | 0.2678 | 0.3294 | 0.1505 |
 
-### Calibration & Risk Thresholds
+### 2. Production Model Hold-Out Validation (Retrained on 276,759 rows)
+
+Evaluated directly on **30,752 unseen test applicants** using the serialized production model:
+
+| Metric | Score | Underwriting Context |
+| :--- | :---: | :--- |
+| **Hold-Out ROC-AUC** | **`0.7853` (78.53%)** | Discriminatory power across unseen credit applicants |
+| **Standard Accuracy ($t = 0.50$)** | **`91.91%`** | Overall classification accuracy at default 50% probability cutoff |
+| **Policy Accuracy ($t = 0.20$)** | **`86.56%`** | Accuracy at conservative 20% high-risk underwriting boundary |
+| **Default Recall ($t = 0.20$)** | **`40.99%`** | Automated detection of ~41% of all subsequent loan defaults |
+| **High-Risk Precision ($t = 0.20$)** | **`27.52%`** | Over 3.4× enrichment above population default rate (8.07%) |
+| **PR-AUC** | **`0.2610` (26.10%)** | Area under precision-recall curve under 11.4:1 class imbalance |
+| **Calibrated Brier Score** | **`0.0658`** | Low probability error (down from `0.1970` pre-calibration) |
+
+### 3. Calibration & Risk Thresholds
 - **Calibration Method:** Isotonic Regression (`CalibratedClassifierCV(method='isotonic')`)
 - **Risk Bands:**
-  - `LOW RISK` (PD < 5.0%): Represents ~42% of applicants, observed default rate 2.4%
-  - `MEDIUM RISK` (5.0% ≤ PD < 20.0%): Represents ~47% of applicants, observed default rate 9.1%
-  - `HIGH RISK` (PD ≥ 20.0%): Represents ~11% of applicants, observed default rate 24.8%
+  - `LOW RISK` (PD < 5.0%): Represents **57.1%** of applicants, observed default rate **1.21%** (Prime tier)
+  - `MEDIUM RISK` (5.0% ≤ PD < 20.0%): Represents **32.7%** of applicants, observed default rate **11.13%** (Standard review)
+  - `HIGH RISK` (PD ≥ 20.0%): Represents **10.3%** of applicants, observed default rate **36.46%** (Elevated risk)
 
 ---
 

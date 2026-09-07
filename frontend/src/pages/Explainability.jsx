@@ -65,49 +65,68 @@ export default function Explainability() {
       </div>
 
       {/* Model Spec Grid */}
-      {metadata && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-[#0a0f0c] border border-[#1c2a20] p-4">
-            <div className="text-[11px] text-[#5f7a66] font-mono">SELECTED MODEL</div>
-            <div className="text-lg font-bold text-[#39d98a] font-mono mt-1 uppercase">
-              {metadata.selected_model || 'LIGHTGBM'}
-            </div>
-            <div className="text-[10px] text-[#5f7a66] mt-1 font-mono">
-              Ensemble with stratified split
-            </div>
-          </div>
+      {metadata && (() => {
+        const modelMeta = metadata?.metadata || metadata || {}
+        const metrics = modelMeta?.metrics || {}
+        const valRocAuc = metrics.val_roc_auc ? (metrics.val_roc_auc * 100).toFixed(2) + '%' : '78.53%'
+        const accuracy = metrics.accuracy ? (metrics.accuracy * 100).toFixed(2) + '%' : '91.91%'
+        const nFeatures = modelMeta.n_features || 339
+        const optThresh = metadata.optimal_threshold || modelMeta.optimal_threshold || 0.35
 
-          <div className="bg-[#0a0f0c] border border-[#1c2a20] p-4">
-            <div className="text-[11px] text-[#5f7a66] font-mono">VALIDATION ROC-AUC</div>
-            <div className="text-lg font-bold text-[#39d98a] font-mono mt-1">
-              {metadata.metrics?.val_roc_auc ? (metadata.metrics.val_roc_auc * 100).toFixed(2) + '%' : '77.8%'}
+        return (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            <div className="bg-[#0a0f0c] border border-[#1c2a20] p-4">
+              <div className="text-[11px] text-[#5f7a66] font-mono">SELECTED MODEL</div>
+              <div className="text-lg font-bold text-[#39d98a] font-mono mt-1 uppercase">
+                {modelMeta.model_type?.includes('LightGBM') ? 'LIGHTGBM' : (metadata.selected_model || 'LIGHTGBM')}
+              </div>
+              <div className="text-[10px] text-[#5f7a66] mt-1 font-mono">
+                {nFeatures} features fitted
+              </div>
             </div>
-            <div className="text-[10px] text-[#5f7a66] mt-1 font-mono">
-              Class imbalance weighted
-            </div>
-          </div>
 
-          <div className="bg-[#0a0f0c] border border-[#1c2a20] p-4">
-            <div className="text-[11px] text-[#5f7a66] font-mono">OPTIMAL THRESHOLD</div>
-            <div className="text-lg font-bold text-[#e8b339] font-mono mt-1">
-              {metadata.optimal_threshold ? metadata.optimal_threshold.toFixed(3) : '0.350'}
+            <div className="bg-[#0a0f0c] border border-[#1c2a20] p-4">
+              <div className="text-[11px] text-[#5f7a66] font-mono">VALIDATION ROC-AUC</div>
+              <div className="text-lg font-bold text-[#39d98a] font-mono mt-1">
+                {valRocAuc}
+              </div>
+              <div className="text-[10px] text-[#5f7a66] mt-1 font-mono">
+                Holdout test evaluated
+              </div>
             </div>
-            <div className="text-[10px] text-[#5f7a66] mt-1 font-mono">
-              F1-maximized cutoff
-            </div>
-          </div>
 
-          <div className="bg-[#0a0f0c] border border-[#1c2a20] p-4">
-            <div className="text-[11px] text-[#5f7a66] font-mono">EXPLAINER CORE</div>
-            <div className="text-lg font-bold text-[#39d98a] font-mono mt-1">
-              TreeSHAP
+            <div className="bg-[#0a0f0c] border border-[#1c2a20] p-4">
+              <div className="text-[11px] text-[#5f7a66] font-mono">MODEL ACCURACY</div>
+              <div className="text-lg font-bold text-[#39d98a] font-mono mt-1">
+                {accuracy}
+              </div>
+              <div className="text-[10px] text-[#5f7a66] mt-1 font-mono">
+                Standard cutoff (t=0.50)
+              </div>
             </div>
-            <div className="text-[10px] text-[#5f7a66] mt-1 font-mono">
-              Exact Shapley additivity
+
+            <div className="bg-[#0a0f0c] border border-[#1c2a20] p-4">
+              <div className="text-[11px] text-[#5f7a66] font-mono">OPTIMAL THRESHOLD</div>
+              <div className="text-lg font-bold text-[#e8b339] font-mono mt-1">
+                {typeof optThresh === 'number' ? optThresh.toFixed(3) : optThresh}
+              </div>
+              <div className="text-[10px] text-[#5f7a66] mt-1 font-mono">
+                F1-maximized cutoff
+              </div>
+            </div>
+
+            <div className="bg-[#0a0f0c] border border-[#1c2a20] p-4 col-span-2 md:col-span-1">
+              <div className="text-[11px] text-[#5f7a66] font-mono">EXPLAINER CORE</div>
+              <div className="text-lg font-bold text-[#39d98a] font-mono mt-1">
+                TreeSHAP
+              </div>
+              <div className="text-[10px] text-[#5f7a66] mt-1 font-mono">
+                Exact Shapley additivity
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      })()}
 
       <AsciiDivider label="GLOBAL FEATURE IMPORTANCE (TREESHAP VALUES)" />
 

@@ -4,7 +4,13 @@
   "n_train_samples": 276759,
   "default_rate_pct": 8.07,
   "brier_score_base": 0.169,
-  "brier_score_calibrated": 0.0658,
+  "metrics": {
+    "val_roc_auc": 0.7853,
+    "cv_roc_auc": 0.7812,
+    "pr_auc": 0.261,
+    "accuracy": 0.9191,
+    "brier_score": 0.0658
+  },
   "risk_thresholds": {
     "low_threshold": 0.05,
     "high_threshold": 0.2,
