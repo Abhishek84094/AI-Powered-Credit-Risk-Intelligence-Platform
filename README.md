@@ -143,6 +143,14 @@ A complete presentation deck detailing the problem statement, exploratory data a
 
 ---
 
+## Live Demo
+
+**[ai-powered-credit-risk-intelligence.onrender.com](https://ai-powered-credit-risk-intelligence.onrender.com)**
+
+The full platform — React frontend and FastAPI backend — is deployed as a single containerized service on Render, running the same Docker image described in [Docker Deployment](#docker-deployment) below. All five sections (Dashboard, Risk Prediction, Explainability, Business Rules, Talk-to-Data) are live and functional against the bundled seed database.
+
+> **Note:** the service runs on Render's free tier, which spins down after periods of inactivity. The first request after idle time may take 30–60 seconds to wake the container — subsequent requests are fast.
+
 ## Design Decisions
 
 ### 1. Why LightGBM over XGBoost and Logistic Regression
