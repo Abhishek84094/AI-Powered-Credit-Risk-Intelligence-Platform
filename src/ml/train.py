@@ -44,6 +44,12 @@ import xgboost as xgb
 warnings.filterwarnings("ignore")
 optuna.logging.set_verbosity(optuna.logging.WARNING)
 
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+
 # ─── Logging setup ────────────────────────────────────────────────────────────
 logging.basicConfig(
     level=logging.INFO,
@@ -151,7 +157,7 @@ def _evaluate_cv(model_factory, X: np.ndarray, y: np.ndarray,
 
 # ─── Feature matrix loading ───────────────────────────────────────────────────
 
-def _load_feature_matrix(nrows: int | None = None):
+def _load_feature_matrix(nrows: int | None = None, allow_small_sample: bool = False):
     """Load the already-built feature matrix from Layer 2 artifacts."""
     # Re-build feature matrix fresh from source
     sys.path.insert(0, ROOT)
@@ -185,15 +191,21 @@ def _load_feature_matrix(nrows: int | None = None):
     feature_names = list(preprocessor.get_feature_names_out())
     logger.info("  Feature names from fitted pipeline: %d", len(feature_names))
 
-    # Save pipeline and feature names
-    pipeline_path = os.path.join(MODELS_DIR, "pipeline.pkl")
-    joblib.dump(preprocessor, pipeline_path)
-    logger.info("  [OK] Pipeline saved: %s", pipeline_path)
+    # Save pipeline and feature names (safeguard: skip on small sample unless explicitly allowed)
+    if (nrows is None or nrows >= 10000) or allow_small_sample:
+        pipeline_path = os.path.join(MODELS_DIR, "pipeline.pkl")
+        joblib.dump(preprocessor, pipeline_path)
+        logger.info("  [OK] Pipeline saved: %s", pipeline_path)
 
-    feat_names_path = os.path.join(MODELS_DIR, "feature_names.json")
-    with open(feat_names_path, "w") as f:
-        json.dump(feature_names, f)
-    logger.info("  [OK] Feature names saved: %s (%d features)", feat_names_path, len(feature_names))
+        feat_names_path = os.path.join(MODELS_DIR, "feature_names.json")
+        with open(feat_names_path, "w") as f:
+            json.dump(feature_names, f)
+        logger.info("  [OK] Feature names saved: %s (%d features)", feat_names_path, len(feature_names))
+    else:
+        logger.warning(
+            "  [SAFEGUARD] Skipping save of pipeline.pkl and feature_names.json for sample run (nrows=%s < 10000).",
+            nrows
+        )
 
     return X_proc, y.values, feature_names, preprocessor, numeric_cols, categorical_cols, X_raw
 
@@ -362,10 +374,19 @@ def run_xgboost(X: np.ndarray, y: np.ndarray) -> dict:
 # ─── Train final model + calibration ─────────────────────────────────────────
 
 def train_final_model(X: np.ndarray, y: np.ndarray, best_params: dict,
-                      feature_names: list[str]) -> None:
+                      feature_names: list[str], allow_small_sample: bool = False) -> None:
     logger.info("=" * 60)
     logger.info("  STEP 7: Training final model + probability calibration")
     logger.info("=" * 60)
+
+    # Permanent safeguard: refuse to overwrite production models if trained on small sample
+    MIN_PRODUCTION_SAMPLES = 10000
+    if X.shape[0] < MIN_PRODUCTION_SAMPLES and not allow_small_sample:
+        raise ValueError(
+            f"SAFEGUARD TRIGGERED: Refusing to overwrite production model artifacts with only "
+            f"{X.shape[0]} samples (minimum threshold: {MIN_PRODUCTION_SAMPLES}). "
+            f"Pass --allow-small-sample if this was an intentional smoke-test run."
+        )
 
     # Train on 90%, calibrate on 10%
     X_train, X_cal, y_train, y_cal = train_test_split(
@@ -495,6 +516,8 @@ def main():
     import argparse
     parser = argparse.ArgumentParser(description="CredPulse Model Training Pipeline")
     parser.add_argument("--sample", type=int, default=None, help="Sample size (number of rows) for fast testing")
+    parser.add_argument("--allow-small-sample", action="store_true", default=False,
+                        help="Allow overwriting model artifacts when training on small sample (<10,000 rows)")
     args, _ = parser.parse_known_args()
 
     logger.info("=" * 60)
@@ -508,7 +531,9 @@ def main():
     logger.info("\n" + "=" * 60)
     logger.info("  STEP 1: Loading and preparing feature matrix")
     logger.info("=" * 60)
-    X, y, feature_names, preprocessor, num_cols, cat_cols, X_raw = _load_feature_matrix(nrows=args.sample)
+    X, y, feature_names, preprocessor, num_cols, cat_cols, X_raw = _load_feature_matrix(
+        nrows=args.sample, allow_small_sample=args.allow_small_sample
+    )
 
     # Step 2: Already logged inside _load_feature_matrix
 
@@ -537,7 +562,9 @@ def main():
 
     # Step 7: Final model + calibration
     logger.info("\nTraining final model...")
-    calibrated_model, thresholds = train_final_model(X, y, best_params, feature_names)
+    calibrated_model, thresholds = train_final_model(
+        X, y, best_params, feature_names, allow_small_sample=args.allow_small_sample
+    )
 
     # Step 8: Print experiment summary
     logger.info("\n" + "=" * 60)
