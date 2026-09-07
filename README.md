@@ -155,31 +155,43 @@ The full platform — React frontend and FastAPI backend — is deployed as a si
 
 ### 1. Why LightGBM over XGBoost and Logistic Regression
 
-The 5-fold stratified cross-validation benchmark (see **Key Experimental Results** table below) showed Tuned LightGBM (EXP-03) reaching a validation ROC-AUC of **0.7812** and PR-AUC of **0.2741** (and **0.7853 ROC-AUC** / **91.91% accuracy** on unseen hold-out test data), outperforming XGBoost (EXP-04: 0.7765 / 0.2678) and Logistic Regression (EXP-01: 0.7642 / 0.2443). Beyond raw AUC, LightGBM's leaf-wise growth and histogram-based binning made it significantly faster to tune across 339 engineered features — many bureau and previous-application aggregates with high NaN rates — and its native `scale_pos_weight` parameter avoids a separate resampling step. TreeSHAP also runs in exact polynomial time on LightGBM ensembles, which was a non-negotiable requirement for per-decision explainability.
+The 5-fold stratified cross-validation benchmark (see **Table 1: 5-Fold Stratified Cross-Validation Benchmark** below) showed Tuned LightGBM (EXP-03) reaching a validation ROC-AUC of **0.7812** and PR-AUC of **0.2741** (and **0.7853 ROC-AUC** / **91.91% accuracy** on unseen hold-out test data in **Table 2**), outperforming XGBoost (EXP-04: 0.7765 / 0.2678) and Logistic Regression (EXP-01: 0.7642 / 0.2443). 
+
+> [!NOTE]
+> **Why ROC-AUC Over Raw Accuracy for Model Selection:** In an imbalanced credit portfolio (8.07% default rate), a naive dummy model predicting "non-default" for every single applicant would achieve **91.93% accuracy** while catching 0% of defaulters. For credit risk underwriting, **ROC-AUC (0.7853)** and **PR-AUC (0.2741)** are the vital optimization metrics because they measure rank-ordering discriminatory power across the entire spectrum. At operational cutoffs, Tuned LightGBM achieves both **91.91% standard accuracy** ($t=0.50$) and **86.56% policy accuracy** ($t=0.20$), successfully capturing **40.99% of all defaults** with **27.52% high-risk precision** (3.4× enrichment above population baseline).
+
+Beyond raw AUC, LightGBM's leaf-wise tree growth and histogram-based binning made it significantly faster to train and tune across 339 engineered features — including high-cardinality bureau and previous-application aggregates with high missingness — and its native `scale_pos_weight` parameter avoids an artificial resampling step. Crucially, TreeSHAP runs in exact polynomial time $O(TLD^2)$ on LightGBM ensembles, satisfying the non-negotiable requirement for sub-second, auditable per-decision explainability.
 
 ### 2. How Class Imbalance Was Handled and Why Calibration Was Needed on Top
 
-The dataset carries an **8.07% default rate** across 307K+ applicants — approximately 11.4 non-defaulters per defaulter. The production model is trained with `scale_pos_weight=11.4`, which up-weights minority-class gradient updates and improves recall without discarding majority-class samples. However, `scale_pos_weight` distorts the probability scale: the model's raw outputs are optimised for rank ordering (high ROC-AUC) but are not calibrated probabilities. Calibration is essential here because the risk bands (`LOW < 5%`, `MEDIUM 5–20%`, `HIGH ≥ 20%`) are defined in probability space and shown directly to underwriters. `CalibratedClassifierCV(method='isotonic', cv='prefit')` is applied post-training to map raw LightGBM scores to empirical posterior probabilities, verified to produce the observed within-band default rates (1.21% / 11.13% / 36.46%).
+The dataset carries an **8.07% default rate** across 307K+ applicants — approximately 11.4 non-defaulters per defaulter. The production model is trained with `scale_pos_weight=11.4`, which up-weights minority-class gradient updates and improves recall without discarding majority-class samples. 
+
+However, `scale_pos_weight` inherently distorts the output probability scale: the booster's raw sigmoid outputs are optimized for binary rank-ordering (maximizing ROC-AUC) rather than true posterior probabilities. Calibration is essential because the platform's risk bands (`LOW < 5%`, `MEDIUM 5–20%`, `HIGH ≥ 20%`) are defined in absolute probability space and shown directly to underwriters and regulatory auditors. `CalibratedClassifierCV(method='isotonic', cv='prefit')` is applied post-training to align predicted scores with empirical posterior frequencies. This drops the **Brier probability error score from 0.1970 to 0.0658** and produces reliable, verified within-band default rates (**1.21% Low / 11.13% Medium / 36.46% High**).
 
 ### 3. Why TreeSHAP Instead of LIME
 
-TreeSHAP (via `shap.TreeExplainer`) computes **exact** Shapley values for tree ensembles in polynomial time — O(TLD²) where T is trees, L is leaves, and D is depth. LIME approximates feature attributions by fitting a local linear surrogate on random perturbations, introducing sampling variance and non-additive explanations that can differ across repeated calls on the same input. Because the platform exposes waterfall attributions directly to underwriters and generates Adverse Action text from them, the SHAP additivity property (base_value + Σ shap_i = predicted_probability) and reproducibility are both required. TreeSHAP satisfies both; LIME does not.
+TreeSHAP (via `shap.TreeExplainer`) computes **exact** Shapley values for tree ensembles in polynomial time — $O(TLD^2)$ where $T$ is trees, $L$ is leaves, and $D$ is depth. LIME approximates feature attributions by fitting a local linear surrogate on random perturbations, introducing sampling variance and non-additive explanations that can differ across repeated calls on the exact same applicant. Because the platform exposes waterfall attributions directly to credit underwriters and automatically synthesizes Adverse Action notices from them, the SHAP local accuracy / additivity property ($\text{base\_value} + \sum \phi_i = \text{predicted\_score}$) and deterministic reproducibility are strict requirements. TreeSHAP satisfies both; LIME does not.
 
 ### 4. Why Groq + Llama for NL-to-SQL, and Why a Deterministic Offline Fallback Was Built Alongside It
 
-Groq's inference API delivers sub-second token generation for `llama-3.3-70b-versatile` (the platform's primary model), making it practical for interactive analyst queries. It is also free-tier accessible with a single API key, which eliminates model-hosting costs for a demo deployment. The deterministic offline fallback (`OFFLINE_PATTERNS` and `_find_offline_pattern()` in `src/talk_to_data/nl_to_sql.py`) exists for two concrete reasons: (a) the Groq API is unavailable when `GROQ_API_KEY` is not set — for example in CI, local development, or Docker without secrets — and (b) LLM availability and latency are not guaranteed at inference time. The 25+ hard-coded SQL templates cover the most common underwriting queries and return identical results every run, keeping the test suite (`test_chat_endpoint_with_offline_fallback`, `test_offline_nl_to_sql_patterns`) fully deterministic without requiring a live API key.
+Groq's LPU inference API delivers sub-second token generation for `llama-3.3-70b-versatile` (the platform's primary LLM), making it practical for interactive, real-time analyst queries. It is also accessible with an API key without expensive GPU infrastructure. The deterministic offline fallback (`OFFLINE_PATTERNS` and `_find_offline_pattern()` in `src/talk_to_data/nl_to_sql.py`) exists for two concrete reasons: (a) the Groq API is unavailable when `GROQ_API_KEY` is not set — for example in CI test pipelines, local air-gapped development, or Docker without secrets — and (b) LLM availability and latency are not guaranteed at runtime. The 25+ pre-compiled SQL templates cover the most common portfolio queries and return identical results every run, keeping the test suite (`test_chat_endpoint_with_offline_fallback`, `test_offline_nl_to_sql_patterns`) fully deterministic without external network dependencies.
 
 ### 5. Why SQLite Instead of a Heavier Database
 
-The Talk-to-Data layer queries a single read-only SQLite file (`sql/credit_risk.db`, 224 MB) containing the full Home Credit dataset — 307K applicants, 305K bureau records, 1.67M previous applications, and 339K installments. SQLite is a deliberate choice for this **single-container, single-user demo deployment**: it requires zero infrastructure (no server daemon, no TCP port, no connection pool), ships inside the Docker image or can be volume-mounted, and supports read-only URI connections (`file:credit_risk.db?mode=ro`) that enforce the read-only boundary already provided by the SQL keyword firewall. For a multi-user production system with concurrent writes, a client-server database (e.g., PostgreSQL) would be the correct choice; for an analyst-facing demo with exclusively `SELECT` workloads, SQLite's zero-config simplicity is the right tradeoff.
+The Talk-to-Data layer queries a single read-only SQLite file (`sql/credit_risk.db`, 224 MB) containing the full Home Credit dataset — 307K applicants, 305K bureau records, 1.67M previous applications, and 339K installments. SQLite is a deliberate choice for this **single-container demo deployment**: it requires zero infrastructure (no server daemon, no TCP port, no connection pool), ships directly inside the Docker image, and supports read-only URI connections (`file:credit_risk.db?mode=ro`) that enforce the read-only boundary already guarded by the SQL keyword firewall. For a high-concurrency production system with continuous writes, PostgreSQL or Snowflake would be appropriate; for an analyst-facing analytical console with exclusively `SELECT` workloads, SQLite's zero-maintenance simplicity is the optimal engineering tradeoff.
 
 ---
 
 ## Key Experimental Results
 
-### 1. 5-Fold Stratified Cross-Validation Benchmark
+> [!IMPORTANT]
+> **Understanding the Two Results Tables Below:**
+> - **Table 1 (Cross-Validation Benchmark):** Answers *"Which model architecture is best?"* Evaluates candidate algorithms (Logistic Regression, LightGBM, XGBoost) across 5 stratified folds on identical features to select the winning production architecture without data leakage.
+> - **Table 2 (Production Model Hold-Out Validation):** Answers *"How does the final retrained model perform on unseen applicants?"* Evaluates the serialized, isotonic-calibrated LightGBM model (trained on 276,759 rows) on an unseen hold-out split of 30,752 applicants, detailing operational metrics like **91.91% Accuracy**, **78.53% ROC-AUC**, **40.99% Default Recall**, and calibrated probability bands.
 
-All models were evaluated using **5-Fold Stratified Cross-Validation** with strict leakage prevention (imputation and scaling fit exclusively inside training splits):
+### Table 1: 5-Fold Stratified Cross-Validation Benchmark (Model Selection)
+
+All candidate models were evaluated using **5-Fold Stratified Cross-Validation** with strict leakage prevention (imputation and scaling fit exclusively inside training splits):
 
 | Exp ID | Model | Feature Set | Imbalance Strategy | Val ROC-AUC | Val PR-AUC | F1 Score | Brier Score |
 | :--- | :--- | :--- | :--- | :---: | :---: | :---: | :---: |
@@ -188,9 +200,9 @@ All models were evaluated using **5-Fold Stratified Cross-Validation** with stri
 | **EXP-03** | **Tuned LightGBM (Production)** | **Full Combined (339 feat.)** | **`scale_pos_weight=11.4`** | **0.7812** | **0.2741** | **0.3382** | **0.1482** |
 | **EXP-04** | XGBoost Benchmark | Full Combined (339 feat.) | `scale_pos_weight=11.4` | 0.7765 | 0.2678 | 0.3294 | 0.1505 |
 
-### 2. Production Model Hold-Out Validation (Retrained on 276,759 rows)
+### Table 2: Production Model Hold-Out Test Validation (30,752 Unseen Applicants)
 
-Evaluated directly on **30,752 unseen test applicants** using the serialized production model:
+Evaluated directly on **30,752 unseen test applicants** using the final serialized production model (`models/lgbm_calibrated.pkl` retrained on 276,759 rows):
 
 | Metric | Score | Underwriting Context |
 | :--- | :---: | :--- |
