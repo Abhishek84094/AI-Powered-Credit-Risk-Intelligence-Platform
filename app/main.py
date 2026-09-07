@@ -345,6 +345,13 @@ def chat(question: ChatQuestion):
 app.include_router(api_router, prefix="/api")
 app.include_router(api_router)
 
+# Mount EDA figures static directory
+EDA_FIGURES_DIR = os.path.join(ROOT, "reports", "eda_figures")
+if os.path.exists(EDA_FIGURES_DIR):
+    from fastapi.staticfiles import StaticFiles
+    app.mount("/reports/eda_figures", StaticFiles(directory=EDA_FIGURES_DIR), name="eda_figures_reports")
+    app.mount("/eda_figures", StaticFiles(directory=EDA_FIGURES_DIR), name="eda_figures")
+
 # Mount frontend production build if present
 if os.path.exists(DIST_DIR):
     from fastapi.staticfiles import StaticFiles

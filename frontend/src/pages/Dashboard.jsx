@@ -198,10 +198,84 @@ function TargetDistributionChart({ target }) {
   )
 }
 
+const EDA_FIGURES = [
+  {
+    id: 'FIG-01',
+    file: '01_target_distribution.png',
+    title: 'TARGET DISTRIBUTION & IMBALANCE',
+    tag: 'IMBALANCE',
+    desc: 'Home Credit default rate stands at 8.07% (11.39:1 non-defaulter to defaulter ratio across 307,511 applicants), establishing the empirical necessity for scale_pos_weight and isotonic probability calibration.'
+  },
+  {
+    id: 'FIG-02',
+    file: '02_application_missing_values.png',
+    title: 'APPLICATION MISSING VALUE PROFILE',
+    tag: 'SPARSITY',
+    desc: 'Profile of sparsity across application features. Features with >60% missingness are cleanly dropped while remaining numeric attributes undergo leakage-safe median imputation.'
+  },
+  {
+    id: 'FIG-03',
+    file: '03_numeric_distributions.png',
+    title: 'KEY FINANCIAL DISTRIBUTIONS',
+    tag: 'DENSITY',
+    desc: 'Empirical distributions for income total, requested credit, annuity, and goods price showing heavy right-skewed tails requiring robust standard scaling.'
+  },
+  {
+    id: 'FIG-04',
+    file: '04_default_rate_by_age.png',
+    title: 'DEFAULT RATE ACROSS AGE COHORTS',
+    tag: 'DEMOGRAPHICS',
+    desc: 'Monotonic decline in default probability as borrower age increases: applicants under 25 default at 12.3%, whereas senior applicants over 60 default at 5.2%.'
+  },
+  {
+    id: 'FIG-05',
+    file: '05_categorical_default_rates.png',
+    title: 'CATEGORICAL DEFAULT RISK GRADIENTS',
+    tag: 'SEGMENTATION',
+    desc: 'Default rate segmentation across education level, income type, family status, and housing type, highlighting elevated risk among lower-secondary education and working cohorts.'
+  },
+  {
+    id: 'FIG-06',
+    file: '06_ext_source_distribution.png',
+    title: 'EXTERNAL CREDIT SCORES (EXT_SOURCE 1-3)',
+    tag: 'BUREAU SCORES',
+    desc: 'External bureau scores exhibit the strongest single-factor discriminatory separation between defaulters (mean ~0.39) and non-defaulters (mean ~0.52).'
+  },
+  {
+    id: 'FIG-07',
+    file: '07_financial_burden_ratios.png',
+    title: 'FINANCIAL BURDEN RATIOS',
+    tag: 'LEVERAGE',
+    desc: 'Engineered leverage ratios: Credit-to-Income, Annuity-to-Income, and Credit-to-Goods Price show significant repayment stress separation in tail percentiles.'
+  },
+  {
+    id: 'FIG-08',
+    file: '08_correlation_heatmap.png',
+    title: 'CORRELATION MATRIX & MULTICOLLINEARITY',
+    tag: 'CORRELATION',
+    desc: 'Pearson correlation heatmap identifying collinearity clusters among financial amounts (credit vs goods price) and orthogonal external bureau signals.'
+  },
+  {
+    id: 'FIG-09',
+    file: '09_financial_outliers_boxplot.png',
+    title: 'FINANCIAL OUTLIERS & RANGE DISPERSION',
+    tag: 'OUTLIERS',
+    desc: 'Tukey boxplot dispersion across financial variables highlighting extreme income outliers and verifying robust quantile handling.'
+  },
+  {
+    id: 'FIG-10',
+    file: '10_prev_application_status.png',
+    title: 'HISTORICAL PREVIOUS APPLICATION STATUSES',
+    tag: 'LOAN HISTORY',
+    desc: 'Aggregated distribution of Approved, Refused, and Canceled prior loans from previous_application table, forming core inputs to policy rule BR-04.'
+  },
+]
+
 export default function Dashboard() {
   const [insights, setInsights] = useState([])
   const [target, setTarget] = useState(null)
   const [tables, setTables] = useState({})
+  const [selectedFigure, setSelectedFigure] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -315,6 +389,51 @@ export default function Dashboard() {
         </TerminalCard>
       </div>
 
+      <AsciiDivider label="EXPLORATORY DATA ANALYSIS ATLAS (ALL 10 EMPIRICAL FIGURES)" />
+
+      {/* All 10 EDA Figures in 2-column Aligned Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {EDA_FIGURES.map((fig) => (
+          <div
+            key={fig.id}
+            className="bg-[#0a0f0c] border border-[#1c2a20] p-4 flex flex-col justify-between"
+          >
+            <div>
+              <div className="flex items-center justify-between border-b border-[#1c2a20] pb-2 mb-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-[#39d98a] font-bold text-xs font-mono">[{fig.id}]</span>
+                  <span className="text-xs font-bold text-[#d7ecd9] font-mono tracking-tight">{fig.title}</span>
+                </div>
+                <span className="text-[10px] font-mono px-2 py-0.5 border border-[#1c2a20] text-[#5f7a66] bg-[#050706]">
+                  {fig.tag}
+                </span>
+              </div>
+
+              <div
+                className="relative w-full h-64 sm:h-72 bg-[#050706] border border-[#1c2a20] overflow-hidden flex items-center justify-center cursor-pointer group"
+                onClick={() => setSelectedFigure(fig)}
+              >
+                <img
+                  src={`/eda_figures/${fig.file}`}
+                  alt={fig.title}
+                  loading="lazy"
+                  className="max-h-full max-w-full object-contain p-2 group-hover:scale-[1.02] transition-transform duration-200"
+                />
+                <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-[#0a0f0c]/90 border border-[#39d98a] text-[#39d98a] text-[10px] font-mono px-2 py-1">
+                  [ CLICK TO EXPAND ]
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-3 pt-2 border-t border-[#1c2a20]">
+              <p className="text-xs text-[#5f7a66] font-mono leading-relaxed">
+                {fig.desc}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+
       <AsciiDivider label="EVIDENCE-BASED BUSINESS INSIGHTS" />
 
       {/* Business Insights Monospace Grid */}
@@ -342,6 +461,42 @@ export default function Dashboard() {
           </div>
         ))}
       </div>
+
+      {/* Lightbox / Zoom Modal for Full-Resolution EDA Figures */}
+      {selectedFigure && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 backdrop-blur-sm"
+          onClick={() => setSelectedFigure(null)}
+        >
+          <div
+            className="bg-[#0a0f0c] border border-[#39d98a] max-w-5xl w-full max-h-[90vh] overflow-y-auto p-4 sm:p-6 flex flex-col shadow-2xl"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-[#1c2a20] pb-3 mb-3">
+              <div className="flex items-center gap-2">
+                <span className="text-[#39d98a] font-bold text-sm font-mono">[{selectedFigure.id}]</span>
+                <span className="text-sm font-bold text-[#d7ecd9] font-mono">{selectedFigure.title}</span>
+              </div>
+              <button
+                onClick={() => setSelectedFigure(null)}
+                className="text-xs font-mono px-3 py-1 border border-[#1c2a20] text-[#5f7a66] hover:text-[#ff5c5c] hover:border-[#ff5c5c] transition-colors"
+              >
+                [ CLOSE ✕ ]
+              </button>
+            </div>
+            <div className="flex-1 flex items-center justify-center bg-[#050706] p-2 border border-[#1c2a20]">
+              <img
+                src={`/eda_figures/${selectedFigure.file}`}
+                alt={selectedFigure.title}
+                className="max-h-[65vh] w-auto object-contain"
+              />
+            </div>
+            <div className="mt-3 text-xs font-mono text-[#d7ecd9] leading-relaxed border-t border-[#1c2a20] pt-2">
+              {selectedFigure.desc}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
